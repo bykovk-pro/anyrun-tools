@@ -1,0 +1,66 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0)'
+        required: true
+
+jobs:
+  publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write  # Required for PyPI trusted publishing
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+        cache-dependency-path: 'pyproject.toml'
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Update version in pyproject.toml
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          VERSION=${{ github.event.inputs.version }}
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+
+    - name: Build package
+      run: python -m build
+
+    - name: Check package
+      run: twine check dist/*
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        skip-existing: true
+
+    - name: Create GitHub Release
+      if: github.event_name == 'workflow_dispatch'
+      uses: softprops/action-gh-release@v1
+      with:
+        name: v${{ github.event.inputs.version }}
+        tag_name: v${{ github.event.inputs.version }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true

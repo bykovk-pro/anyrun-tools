@@ -1,0 +1,127 @@
+site_name: ANY.RUN Tools
+site_description: Python SDK for ANY.RUN APIs
+site_author: ANY.RUN
+site_url: https://anyrun.github.io/anyrun-tools
+
+repo_name: anyrun/anyrun-tools
+repo_url: https://github.com/anyrun/anyrun-tools
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - i18n:
+      default_language: en
+      languages:
+        en: English
+        ru: Русский
+      nav_translations:
+        ru:
+          Getting Started: Начало работы
+          Installation: Установка
+          Configuration: Конфигурация
+          API Reference: Справочник API
+          Examples: Примеры
+          Contributing: Участие в разработке
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+nav:
+  - Home:
+    - en/index.md
+    - ru/index.md
+  - Getting Started:
+    - Installation:
+      - en/getting-started/installation.md
+      - ru/getting-started/installation.md
+    - Configuration:
+      - en/getting-started/configuration.md
+      - ru/getting-started/configuration.md
+    - Quick Start:
+      - en/getting-started/quickstart.md
+      - ru/getting-started/quickstart.md
+  - API Reference:
+    - Client:
+      - en/api-reference/client.md
+      - ru/api-reference/client.md
+    - Sandbox API:
+      - Overview:
+        - en/api-reference/sandbox/index.md
+        - ru/api-reference/sandbox/index.md
+      - Models:
+        - en/api-reference/sandbox/models.md
+        - ru/api-reference/sandbox/models.md
+      - Endpoints:
+        - en/api-reference/sandbox/endpoints.md
+        - ru/api-reference/sandbox/endpoints.md
+    - TI Lookup API:
+      - Overview:
+        - en/api-reference/ti-lookup/index.md
+        - ru/api-reference/ti-lookup/index.md
+      - Models:
+        - en/api-reference/ti-lookup/models.md
+        - ru/api-reference/ti-lookup/models.md
+      - Endpoints:
+        - en/api-reference/ti-lookup/endpoints.md
+        - ru/api-reference/ti-lookup/endpoints.md
+    - TI YARA API:
+      - Overview:
+        - en/api-reference/ti-yara/index.md
+        - ru/api-reference/ti-yara/index.md
+      - Models:
+        - en/api-reference/ti-yara/models.md
+        - ru/api-reference/ti-yara/models.md
+      - Endpoints:
+        - en/api-reference/ti-yara/endpoints.md
+        - ru/api-reference/ti-yara/endpoints.md
+  - Examples:
+    - Sandbox:
+      - File Analysis:
+        - en/examples/sandbox/file-analysis.md
+        - ru/examples/sandbox/file-analysis.md
+      - Task Monitoring:
+        - en/examples/sandbox/task-monitoring.md
+        - ru/examples/sandbox/task-monitoring.md
+    - TI Lookup:
+      - Hash Lookup:
+        - en/examples/ti-lookup/hash-lookup.md
+        - ru/examples/ti-lookup/hash-lookup.md
+    - TI YARA:
+      - Rule Matching:
+        - en/examples/ti-yara/rule-matching.md
+        - ru/examples/ti-yara/rule-matching.md
+  - Contributing:
+    - en/contributing.md
+    - ru/contributing.md
