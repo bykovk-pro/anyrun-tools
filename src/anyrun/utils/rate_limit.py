@@ -153,5 +153,5 @@ class RateLimiter:
         return {
             "limit": self.burst,
             "remaining": self.get_available_tokens(),
-            "reset": self.reset
+            "reset": self.reset,
         }

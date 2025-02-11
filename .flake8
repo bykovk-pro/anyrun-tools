@@ -4,4 +4,4 @@ exclude = .git,__pycache__,build,dist,*.egg-info
 ignore = E203,W503,E231,D401,F811,E221
 inline-quotes = double
 multiline-quotes = double
-docstring-quotes = double 
+docstring-quotes = double

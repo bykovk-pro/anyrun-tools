@@ -2,7 +2,7 @@
 
 from typing import List
 
-from .analysis import AnalysisResponse, AnalysisListResponse
+from .analysis import AnalysisListResponse, AnalysisResponse
 from .environment import EnvironmentResponse
 from .user import UserInfoResponse, UserPresetsResponse
 

@@ -5,7 +5,7 @@
 [![Documentation](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/docs.yml/badge.svg)](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/docs.yml)
 [![PyPI version](https://badge.fury.io/py/anyrun-tools.svg)](https://badge.fury.io/py/anyrun-tools)
 [![Python versions](https://img.shields.io/pypi/pyversions/anyrun-tools.svg)](https://pypi.org/project/anyrun-tools/)
-[![License](https://img.shields.io/github/license/anyrun/anyrun-tools.svg)](https://github.com/anyrun/anyrun-tools/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/bykovk-pro/anyrun-tools.svg)](https://github.com/bykovk-pro/anyrun-tools/blob/main/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Python SDK for ANY.RUN APIs
@@ -79,19 +79,19 @@ async with AnyRunClient(api_key="your-api-key") as client:
 
 ## Documentation
 
-For detailed documentation, please visit [https://anyrun.github.io/anyrun-tools](https://anyrun.github.io/anyrun-tools)
+For detailed documentation, please visit [https://bykovk-pro.github.io/anyrun-tools](https://bykovk-pro.github.io/anyrun-tools)
 
-- [Installation](https://anyrun.github.io/anyrun-tools/getting-started/installation/)
-- [Configuration](https://anyrun.github.io/anyrun-tools/getting-started/configuration/)
-- [Quick Start](https://anyrun.github.io/anyrun-tools/getting-started/quickstart/)
-- [API Reference](https://anyrun.github.io/anyrun-tools/api-reference/client/)
-- [Examples](https://anyrun.github.io/anyrun-tools/examples/sandbox/file-analysis/)
+- [Installation](https://bykovk-pro.github.io/anyrun-tools/getting-started/installation/)
+- [Configuration](https://bykovk-pro.github.io/anyrun-tools/getting-started/configuration/)
+- [Quick Start](https://bykovk-pro.github.io/anyrun-tools/getting-started/quickstart/)
+- [API Reference](https://bykovk-pro.github.io/anyrun-tools/api-reference/client/)
+- [Examples](https://bykovk-pro.github.io/anyrun-tools/examples/sandbox/file-analysis/)
 
 ## Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/anyrun/anyrun-tools.git
+git clone https://github.com/bykovk-pro/anyrun-tools.git
 cd anyrun-tools
 
 # Create virtual environment

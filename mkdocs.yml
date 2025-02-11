@@ -1,10 +1,10 @@
 site_name: ANY.RUN Tools
 site_description: Python SDK for ANY.RUN APIs
 site_author: ANY.RUN
-site_url: https://anyrun.github.io/anyrun-tools
+site_url: https://bykovk-pro.github.io/anyrun-tools
 
 repo_name: anyrun/anyrun-tools
-repo_url: https://github.com/anyrun/anyrun-tools
+repo_url: https://github.com/bykovk-pro/anyrun-tools
 edit_uri: edit/main/docs/
 
 theme:
