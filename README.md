@@ -1,8 +1,8 @@
 # ANY.RUN Tools
 
-[![Tests](https://github.com/anyrun/anyrun-tools/actions/workflows/test.yml/badge.svg)](https://github.com/anyrun/anyrun-tools/actions/workflows/test.yml)
-[![Lint](https://github.com/anyrun/anyrun-tools/actions/workflows/lint.yml/badge.svg)](https://github.com/anyrun/anyrun-tools/actions/workflows/lint.yml)
-[![Documentation](https://github.com/anyrun/anyrun-tools/actions/workflows/docs.yml/badge.svg)](https://github.com/anyrun/anyrun-tools/actions/workflows/docs.yml)
+[![Tests](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/test.yml/badge.svg)](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/test.yml)
+[![Lint](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/lint.yml/badge.svg)](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/lint.yml)
+[![Documentation](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/docs.yml/badge.svg)](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/docs.yml)
 [![PyPI version](https://badge.fury.io/py/anyrun-tools.svg)](https://badge.fury.io/py/anyrun-tools)
 [![Python versions](https://img.shields.io/pypi/pyversions/anyrun-tools.svg)](https://pypi.org/project/anyrun-tools/)
 [![License](https://img.shields.io/github/license/anyrun/anyrun-tools.svg)](https://github.com/anyrun/anyrun-tools/blob/main/LICENSE)
