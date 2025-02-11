@@ -60,7 +60,7 @@ print(anyrun.__version__)
 
 - [Configure the client](configuration.md)
 - [Quick start guide](quickstart.md)
-- [API reference](../api-reference/client.md)
+- [API reference](https://any.run/api-documentation/)
 
 ## Troubleshooting
 
@@ -82,7 +82,7 @@ print(anyrun.__version__)
 
 If you encounter any issues during installation:
 
-1. Check our [GitHub Issues](https://github.com/anyrun/anyrun-tools/issues) for similar problems
+1. Check our [GitHub Issues](https://github.com/bykovk-pro/anyrun-tools/issues) for similar problems
 2. Create a new issue if your problem hasn't been reported
 3. Include your:
    - Python version

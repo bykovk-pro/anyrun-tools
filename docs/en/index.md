@@ -66,8 +66,8 @@ For detailed documentation, please visit:
 - [Installation](getting-started/installation.md)
 - [Configuration](getting-started/configuration.md)
 - [Quick Start](getting-started/quickstart.md)
-- [API Reference](api-reference/client.md)
-- [Examples](examples/sandbox/file-analysis.md)
+- [API Reference](https://any.run/api-documentation/)
+- [Examples](examples/sandbox/analyze-file.py)
 
 ## Contributing
 
@@ -75,4 +75,4 @@ We welcome contributions! Please see our [Contributing Guide](contributing.md) f
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/anyrun/anyrun-tools/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/bykovk-pro/anyrun-tools/blob/main/LICENSE) file for details.

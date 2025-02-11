@@ -192,5 +192,5 @@ for file in files:
 ## Next steps
 
 - [Configuration guide](configuration.md) - Learn about all configuration options
-- [API reference](../api-reference/client.md) - Detailed API documentation
-- [Examples](../examples/sandbox/file-analysis.md) - More code examples
+- [API reference](https://any.run/api-documentation/) - Detailed API documentation
+- [Examples](../examples/sandbox/analyze-file.py) - More code examples

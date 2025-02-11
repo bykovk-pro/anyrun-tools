@@ -153,5 +153,5 @@ Configuration values are loaded in the following order (later values override ea
 ## Next steps
 
 - [Quick start guide](quickstart.md)
-- [API reference](../api-reference/client.md)
-- [Examples](../examples/sandbox/file-analysis.md)
+- [API reference](https://any.run/api-documentation/)
+- [Examples](../examples/sandbox/analyze-file.py)
