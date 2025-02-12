@@ -3,6 +3,8 @@
 from enum import Enum
 from typing import Dict, Final, Tuple
 
+from ._version import __version__
+
 # API URLs
 API_BASE_URL: Final[str] = "https://api.any.run"
 API_DOCS_URL: Final[str] = "https://api.any.run/docs"
@@ -20,7 +22,7 @@ class APIVersion(str, Enum):
 # HTTP headers
 HEADER_API_KEY: Final[str] = "Authorization"
 HEADER_USER_AGENT: Final[str] = "User-Agent"
-DEFAULT_USER_AGENT: Final[str] = "anyrun-tools/0.1.0"
+DEFAULT_USER_AGENT: Final[str] = f"anyrun-tools/{__version__}"
 
 # Request limits
 MAX_FILE_SIZE: Final[int] = 100 * 1024 * 1024  # 100MB
