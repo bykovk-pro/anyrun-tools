@@ -1,9 +1,12 @@
 """Tests for Sandbox API v1 endpoints."""
 
+from typing import AsyncGenerator
+
 import httpx
 import pytest
 import respx
 
+from anyrun import AnyRunClient
 from anyrun.sandbox.v1.endpoints import (
     ANALYSIS_CREATE,
     ANALYSIS_GET,
@@ -54,7 +57,7 @@ def test_user_endpoints() -> None:
 
 @pytest.mark.asyncio
 async def test_analysis_create_endpoint(
-    mock_api: respx.Router, client: httpx.AsyncClient
+    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
 ) -> None:
     """Test analysis create endpoint."""
     mock_api.post(ANALYSIS_CREATE).mock(
@@ -64,21 +67,23 @@ async def test_analysis_create_endpoint(
         )
     )
 
-    response = await client.sandbox.analyze_file(
-        file=b"test content",
-        env_os=OSType.WINDOWS,
-        env_version=WindowsVersion.WIN10,
-        env_bitness=BitnessType.X64,
-        env_type=EnvType.CLEAN,
-    )
-    assert response.error is False
-    assert response.data["task_id"] == "test123"
-    assert response.data["status"] == "queued"
+    async for c in client:
+        response = await c.sandbox.analyze_file(
+            file=b"test content",
+            env_os=OSType.WINDOWS,
+            env_version=WindowsVersion.WIN10,
+            env_bitness=BitnessType.X64,
+            env_type=EnvType.CLEAN,
+        )
+        assert response.error is False
+        assert response.data["task_id"] == "test123"
+        assert response.data["status"] == "queued"
+        break
 
 
 @pytest.mark.asyncio
 async def test_analysis_get_endpoint(
-    mock_api: respx.Router, client: httpx.AsyncClient
+    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
 ) -> None:
     """Test analysis get endpoint."""
     task_id = "test123"
@@ -91,15 +96,17 @@ async def test_analysis_get_endpoint(
         )
     )
 
-    response = await client.sandbox.get_analysis(task_id)
-    assert response.error is False
-    assert response.data["task_id"] == task_id
-    assert response.data["status"] == "completed"
+    async for c in client:
+        response = await c.sandbox.get_analysis(task_id)
+        assert response.error is False
+        assert response.data["task_id"] == task_id
+        assert response.data["status"] == "completed"
+        break
 
 
 @pytest.mark.asyncio
 async def test_analysis_list_endpoint(
-    mock_api: respx.Router, client: httpx.AsyncClient
+    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
 ) -> None:
     """Test analysis list endpoint."""
     mock_api.get(ANALYSIS_LIST).mock(
@@ -115,16 +122,18 @@ async def test_analysis_list_endpoint(
         )
     )
 
-    response = await client.sandbox.list_analyses()
-    assert response.error is False
-    assert len(response.data["items"]) == 1
-    assert response.data["items"][0]["task_id"] == "test123"
-    assert response.data["total"] == 1
+    async for c in client:
+        response = await c.sandbox.list_analyses()
+        assert response.error is False
+        assert len(response.data["items"]) == 1
+        assert response.data["items"][0]["task_id"] == "test123"
+        assert response.data["total"] == 1
+        break
 
 
 @pytest.mark.asyncio
 async def test_analysis_status_endpoint(
-    mock_api: respx.Router, client: httpx.AsyncClient
+    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
 ) -> None:
     """Test analysis status endpoint."""
     task_id = "test123"
@@ -137,15 +146,17 @@ async def test_analysis_status_endpoint(
         )
     )
 
-    response = await client.sandbox.get_analysis_status(task_id)
-    assert response.error is False
-    assert response.data["status"] == "running"
-    assert response.data["progress"] == 50
+    async for c in client:
+        response = await c.sandbox.get_analysis_status(task_id)
+        assert response.error is False
+        assert response.data["status"] == "running"
+        assert response.data["progress"] == 50
+        break
 
 
 @pytest.mark.asyncio
 async def test_analysis_monitor_endpoint(
-    mock_api: respx.Router, client: httpx.AsyncClient
+    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
 ) -> None:
     """Test analysis monitor endpoint."""
     task_id = "test123"
@@ -161,15 +172,17 @@ async def test_analysis_monitor_endpoint(
         )
     )
 
-    response = await client.sandbox.get_analysis_monitor(task_id)
-    assert response.error is False
-    assert response.data["process"]["pid"] == 1234
-    assert response.data["process"]["name"] == "test.exe"
+    async for c in client:
+        response = await c.sandbox.get_analysis_monitor(task_id)
+        assert response.error is False
+        assert response.data["process"]["pid"] == 1234
+        assert response.data["process"]["name"] == "test.exe"
+        break
 
 
 @pytest.mark.asyncio
 async def test_environment_info_endpoint(
-    mock_api: respx.Router, client: httpx.AsyncClient
+    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
 ) -> None:
     """Test environment info endpoint."""
     mock_api.get(ENVIRONMENT_INFO).mock(
@@ -185,7 +198,9 @@ async def test_environment_info_endpoint(
         )
     )
 
-    response = await client.sandbox.get_environment()
-    assert response.error is False
-    assert "windows" in response.data
-    assert "linux" in response.data
+    async for c in client:
+        response = await c.sandbox.get_environment()
+        assert response.error is False
+        assert "windows" in response.data
+        assert "linux" in response.data
+        break

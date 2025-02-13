@@ -63,8 +63,10 @@ async def client(config: BaseConfig) -> AsyncGenerator[AnyRunClient, None]:
         retry_strategy=config.retry_strategy,
         log_level=config.log_level,
     )
-    yield client
-    await client.close()
+    try:
+        yield client
+    finally:
+        await client.close()
 
 
 @pytest.fixture

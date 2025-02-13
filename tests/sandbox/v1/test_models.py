@@ -165,11 +165,11 @@ def test_analysis_response_validation() -> None:
 
     # Invalid response - error should be boolean
     with pytest.raises(ValidationError):
-        AnalysisResponse(error=False, data="not_a_dict")
+        AnalysisResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
 
     # Invalid response - data should be a dict
     with pytest.raises(ValidationError):
-        AnalysisResponse(error=False, data="not_a_dict")
+        AnalysisResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
 
 
 def test_analysis_list_request_validation() -> None:
@@ -209,7 +209,7 @@ def test_analysis_list_response_validation() -> None:
 
     # Invalid response - data should be a dict
     with pytest.raises(ValidationError):
-        AnalysisListResponse(error=False, data="not_a_dict")
+        AnalysisListResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
 
 
 def test_environment_response_validation() -> None:
@@ -228,7 +228,7 @@ def test_environment_response_validation() -> None:
 
     # Invalid response - data should be a dict
     with pytest.raises(ValidationError):
-        EnvironmentResponse(error=False, data="not_a_dict")
+        EnvironmentResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
 
 
 def test_user_info_request_validation() -> None:
@@ -254,7 +254,7 @@ def test_user_info_response_validation() -> None:
 
     # Invalid response - data should be a dict
     with pytest.raises(ValidationError):
-        UserInfoResponse(error=False, data="not_a_dict")
+        UserInfoResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
 
 
 def test_user_presets_response_validation() -> None:
@@ -281,7 +281,7 @@ def test_user_presets_response_validation() -> None:
 
     # Invalid response - data should be a list
     with pytest.raises(ValidationError):
-        UserPresetsResponse(error=False, data="not_a_list")
+        UserPresetsResponse(error=False, data="not_a_list")  # type: ignore[arg-type]
 
     # Invalid response - data should be a list of dicts with specific structure
     with pytest.raises(ValidationError):

@@ -165,11 +165,10 @@ async def test_sandbox_get_analysis_status(mock_api: respx.Router) -> None:
     )
 
     client = SandboxClient(api_key="test_key")
-    async for update in client.get_analysis_status("test123"):
-        assert update["error"] is False
-        assert update["data"]["task_id"] == "test123"
-        assert update["data"]["status"] == "running"
-        break
+    response = await client.get_analysis_status("test123")
+    assert response.error is False
+    assert response.data["task_id"] == "test123"
+    assert response.data["status"] == "running"
 
 
 @pytest.mark.asyncio

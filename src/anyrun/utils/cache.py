@@ -6,6 +6,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, Optional, Protocol, Tuple, TypeVar, Union
 
 from loguru import logger
+from redis.asyncio import Redis
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis
@@ -62,7 +63,7 @@ class Cache:
 
     def __init__(
         self,
-        backend: Optional[Union[CacheBackend, "Redis"]] = None,
+        backend: Optional[Union[CacheBackend, Redis]] = None,
         enabled: bool = True,
         prefix: str = "anyrun:",
         default_ttl: int = 300,
@@ -85,8 +86,10 @@ class Cache:
             self.backend = MemoryCache()
         elif isinstance(backend, (RedisCache, MemoryCache, NoCache)):
             self.backend = backend
-        else:
+        elif isinstance(backend, Redis):
             self.backend = RedisCache(backend, prefix, default_ttl)
+        else:
+            raise ValueError("Invalid cache backend")
 
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache.
@@ -142,7 +145,7 @@ class RedisCache(CacheBackend):
 
     def __init__(
         self,
-        client: "Redis",
+        client: Redis,
         prefix: str = "anyrun:",
         default_ttl: int = 300,
     ) -> None:
