@@ -1,8 +1,10 @@
 """Version information."""
 
-import tomli
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
+
+import tomli
+
 
 def get_version_from_pyproject() -> str:
     """Get version from pyproject.toml."""
@@ -14,7 +16,8 @@ def get_version_from_pyproject() -> str:
     except Exception:
         return "unknown-dev"
 
+
 try:
     __version__ = version("anyrun-tools")
 except PackageNotFoundError:
-    __version__ = get_version_from_pyproject() 
+    __version__ = get_version_from_pyproject()

@@ -67,11 +67,11 @@ For detailed documentation, please visit:
 - [Configuration](getting-started/configuration.md)
 - [Quick Start](getting-started/quickstart.md)
 - [API Reference](https://any.run/api-documentation/)
-- [Examples](examples/sandbox/analyze-file.py)
+- [Examples](https://github.com/bykovk-pro/anyrun-tools/tree/main/examples)
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](contributing.md) for details.
+We welcome contributions! Please see our [Contributing Guide](https://github.com/bykovk-pro/anyrun-tools/contributing.md) for details.
 
 ## License
 

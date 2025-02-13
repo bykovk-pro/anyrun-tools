@@ -1,5 +1,7 @@
 """Tests for ANY.RUN API client."""
 
+from typing import Type
+
 import httpx
 import pytest
 import respx
@@ -77,7 +79,7 @@ async def test_client_error_handling(
     mock_api: respx.MockRouter,
     config: BaseConfig,
     status_code: int,
-    error_class: type[APIError],
+    error_class: Type[APIError],
 ) -> None:
     """Test client error handling."""
     mock_api.get("/test").mock(

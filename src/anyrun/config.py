@@ -10,7 +10,10 @@ from .constants import (
     DEFAULT_CACHE_TTL,
     DEFAULT_RATE_LIMIT,
     DEFAULT_RATE_LIMIT_WINDOW,
+    DEFAULT_RETRY_COUNT,
+    DEFAULT_RETRY_DELAY,
     DEFAULT_TIMEOUT,
+    MAX_RETRY_DELAY,
     APIVersion,
 )
 from .types import CacheBackend, LogLevel, RateLimitBackend, RetryStrategy
@@ -24,10 +27,10 @@ class BaseConfig(BaseModel):
     )
 
     api_key: str = Field(..., description="API key")
-    base_url: HttpUrl = Field(default=API_BASE_URL, description="Base URL")
+    base_url: HttpUrl = Field(default=HttpUrl(API_BASE_URL), description="Base URL")
     api_version: APIVersion = Field(default=APIVersion.V1, description="API version")
-    timeout: int = Field(
-        default=DEFAULT_TIMEOUT, description="Request timeout in seconds"
+    timeout: float = Field(
+        default=float(DEFAULT_TIMEOUT), description="Request timeout in seconds"
     )
     verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
     proxies: Optional[Dict[str, str]] = Field(None, description="HTTP/HTTPS proxies")
@@ -65,12 +68,14 @@ class BaseConfig(BaseModel):
     retry_strategy: RetryStrategy = Field(
         default=RetryStrategy.EXPONENTIAL, description="Retry strategy"
     )
-    retry_max_attempts: int = Field(default=3, description="Maximum retry attempts")
+    retry_max_attempts: int = Field(
+        default=DEFAULT_RETRY_COUNT, description="Maximum retry attempts"
+    )
     retry_initial_delay: float = Field(
-        default=1.0, description="Initial retry delay in seconds"
+        default=DEFAULT_RETRY_DELAY, description="Initial retry delay in seconds"
     )
     retry_max_delay: float = Field(
-        default=60.0, description="Maximum retry delay in seconds"
+        default=MAX_RETRY_DELAY, description="Maximum retry delay in seconds"
     )
     retry_backoff_factor: float = Field(default=2.0, description="Retry backoff factor")
 

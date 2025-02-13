@@ -193,4 +193,4 @@ for file in files:
 
 - [Configuration guide](configuration.md) - Learn about all configuration options
 - [API reference](https://any.run/api-documentation/) - Detailed API documentation
-- [Examples](../examples/sandbox/analyze-file.py) - More code examples
+- [Examples](https://github.com/bykovk-pro/anyrun-tools/tree/main/examples) - More code examples

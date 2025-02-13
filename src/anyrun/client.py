@@ -3,6 +3,8 @@
 from typing import Any, Dict, Optional, Union, cast
 
 import httpx
+from loguru import logger
+from pydantic import HttpUrl
 from redis.asyncio import Redis as AsyncRedis
 
 from .config import BaseConfig
@@ -91,7 +93,7 @@ class BaseClient:
         if self._cache is None:
             backend: Union[CacheBackendType, AsyncRedis[Any], None] = None
             if self.config.cache_backend == CacheBackend.REDIS:
-                backend = AsyncRedis()  # type: ignore
+                backend = AsyncRedis()
             elif self.config.cache_backend == CacheBackend.MEMORY:
                 backend = MemoryCache()
 
@@ -181,13 +183,13 @@ class BaseClient:
                 headers=headers,
             )
             response.raise_for_status()
-            data = response.json()
+            response_data: Dict[str, Any] = response.json()
 
             # Cache successful GET response
             if cache_key and method.upper() == "GET":
-                await self.cache.set(cache_key, data, ttl=cache_ttl)
+                await self.cache.set(cache_key, response_data, ttl=cache_ttl)
 
-            return data
+            return response_data
 
         except httpx.HTTPStatusError as e:
             error_msg = str(e)
@@ -196,12 +198,13 @@ class BaseClient:
                 if isinstance(error_data, dict):
                     error_msg = error_data.get("message", str(e))
             except Exception:
-                pass
+                # Failed to parse error response, use original error message
+                logger.debug("Failed to parse error response JSON")
 
             if e.response.status_code == 401:
-                raise AuthenticationError(error_msg)
+                raise AuthenticationError(error_msg) from e
             elif e.response.status_code == 404:
-                raise NotFoundError(error_msg)
+                raise NotFoundError(error_msg) from e
             elif e.response.status_code == 429:
                 raise RateLimitError(
                     message=error_msg,
@@ -210,7 +213,7 @@ class BaseClient:
             elif e.response.status_code >= 500:
                 raise ServerError(error_msg)
             else:
-                raise APIError(error_msg)
+                raise APIError(error_msg) from e
 
         except httpx.RequestError as e:
             raise APIError(f"Request failed: {str(e)}")
@@ -326,7 +329,8 @@ class AnyRunClient:
         """
         self.config = BaseConfig(
             api_key=api_key,
-            base_url=API_BASE_URL,
+            base_url=HttpUrl(API_BASE_URL),
+            proxies={},
             timeout=kwargs.get("timeout", DEFAULT_TIMEOUT),
             user_agent=kwargs.get("user_agent", DEFAULT_USER_AGENT),
             verify_ssl=kwargs.get("verify_ssl", True),
@@ -345,19 +349,19 @@ class AnyRunClient:
             api_key=api_key,
             version=sandbox_version,
             cache_enabled=self.config.cache_enabled,
-            timeout=self.config.timeout,
+            timeout=int(self.config.timeout),
         )
         self.ti_lookup = TILookupClient(
             api_key=api_key,
             version=ti_lookup_version,
             cache_enabled=self.config.cache_enabled,
-            timeout=self.config.timeout,
+            timeout=int(self.config.timeout),
         )
         self.ti_yara = TIYaraClient(
             api_key=api_key,
             version=ti_yara_version,
             cache_enabled=self.config.cache_enabled,
-            timeout=self.config.timeout,
+            timeout=int(self.config.timeout),
         )
 
     @property

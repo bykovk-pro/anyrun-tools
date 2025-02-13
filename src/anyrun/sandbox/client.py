@@ -1,6 +1,7 @@
 """Sandbox API client implementation."""
 
 import json
+import os
 from typing import Any, AsyncGenerator, Dict, Optional, Union, cast
 
 import httpx
@@ -155,6 +156,25 @@ class SandboxClient:
         else:
             raise APIError(error_message, response.status_code)
 
+    def _get_file_content(self, file: Union[str, bytes]) -> bytes:
+        """Get file content as bytes.
+
+        Args:
+            file: File content as string or bytes
+
+        Returns:
+            bytes: File content as bytes
+
+        Raises:
+            ValidationError: If file content is invalid
+        """
+        if isinstance(file, str):
+            if os.path.isfile(file):
+                with open(file, "rb") as f:
+                    return f.read()
+            return file.encode()
+        return file
+
     async def analyze(self, **kwargs: Any) -> AnalysisResponse:
         """Submit new analysis.
 
@@ -183,14 +203,11 @@ class SandboxClient:
                     raise ValidationError("file is required for file analysis")
                 # Handle file content as bytes
                 filename = kwargs.get("filename", "malware.exe")
+                file_content = self._get_file_content(request.file)
                 files = {
                     "file": (
                         filename,
-                        (
-                            request.file
-                            if isinstance(request.file, bytes)
-                            else request.file.encode("utf-8")
-                        ),
+                        file_content,
                     )
                 }
 

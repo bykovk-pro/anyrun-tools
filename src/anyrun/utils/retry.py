@@ -40,23 +40,6 @@ class RetryConfig:
     """Exception types to retry on. If None, retry on all exceptions."""
 
 
-class RetryError(Exception):
-    """Error raised when all retry attempts fail."""
-
-    def __init__(self, attempts: int, last_error: Exception) -> None:
-        """Initialize retry error.
-
-        Args:
-            attempts: Number of attempts made
-            last_error: Last error encountered
-        """
-        self.attempts = attempts
-        self.last_error = last_error
-        super().__init__(
-            f"Failed after {attempts} attempts. Last error: {str(last_error)}"
-        )
-
-
 def retry(
     max_attempts: int = 3,
     delay: float = 1.0,
@@ -130,7 +113,7 @@ def retry(
                     )
 
                     if jitter:
-                        current_delay *= random.uniform(0.5, 1.5)
+                        current_delay *= random.uniform(0.5, 1.5)  # nosec B311
 
                     logger.debug(
                         f"Attempt {attempt} failed with {type(exc).__name__}. "

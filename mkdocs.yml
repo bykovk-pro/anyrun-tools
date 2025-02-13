@@ -51,12 +51,5 @@ nav:
     - Installation: getting-started/installation.md
     - Configuration: getting-started/configuration.md
     - Quick Start: getting-started/quickstart.md
-  - Examples:
-    - Sandbox:
-      - File Analysis: examples/sandbox/analyze-file.py
-      - Task Monitoring: examples/sandbox/monitor-task.py
-    - TI Lookup:
-      - Hash Lookup: examples/ti-lookup/lookup-hash.py
-    - TI YARA:
-      - Rule Matching: examples/ti-yara/match-rule.py
-  - Contributing: contributing.md
+  - Examples: https://github.com/bykovk-pro/anyrun-tools/tree/main/examples
+  - Contributing: https://github.com/bykovk-pro/anyrun-tools/contributing.md

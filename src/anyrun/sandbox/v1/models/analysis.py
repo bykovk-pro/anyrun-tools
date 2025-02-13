@@ -1,7 +1,8 @@
 """Analysis models for Sandbox API v1."""
 
+from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import (
     BaseModel,
@@ -314,3 +315,99 @@ class DeleteAnalysisResponse(BaseModel):
 
     error: bool
     data: dict
+
+
+class AnalysisStatus(str, Enum):
+    """Analysis status."""
+
+    QUEUED = "queued"
+    STARTING = "starting"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class AnalysisResult(BaseModel):
+    """Analysis result model."""
+
+    # Basic information
+    uuid: str = Field(description="Analysis UUID")
+    status: AnalysisStatus = Field(description="Analysis status")
+    created_at: datetime = Field(description="Creation timestamp")
+    started_at: Optional[datetime] = Field(None, description="Start timestamp")
+    completed_at: Optional[datetime] = Field(None, description="Completion timestamp")
+    error: Optional[str] = Field(None, description="Error message")
+
+    # Object information
+    obj_type: ObjectType = Field(description="Object type")
+    obj_url: Optional[HttpUrl] = Field(None, description="Object URL")
+    obj_hash: Optional[str] = Field(None, description="Object hash")
+    obj_filename: Optional[str] = Field(None, description="Object filename")
+    obj_size: Optional[int] = Field(None, description="Object size in bytes")
+    obj_mime: Optional[str] = Field(None, description="Object MIME type")
+
+    # Environment information
+    env_os: OSType = Field(description="Operating system type")
+    env_bitness: BitnessType = Field(description="Operating system bitness")
+    env_version: str = Field(description="Operating system version")
+    env_type: EnvType = Field(description="Environment type")
+    env_browser: Optional[Browser] = Field(None, description="Browser type")
+
+    # Analysis options
+    opt_network_connect: bool = Field(description="Network connection state")
+    opt_network_fakenet: bool = Field(description="FakeNet feature status")
+    opt_network_tor: bool = Field(description="TOR using")
+    opt_network_mitm: bool = Field(description="HTTPS MITM proxy option")
+    opt_privacy_type: PrivacyType = Field(description="Privacy settings")
+    opt_privacy_hidesource: bool = Field(description="Option for hiding source URL")
+    opt_chatgpt: Optional[bool] = None
+
+    # Analysis results
+    result_score: Optional[int] = Field(None, description="Analysis score")
+    result_verdict: Optional[str] = Field(None, description="Analysis verdict")
+    result_categories: Optional[List[str]] = Field(
+        None, description="Analysis categories"
+    )
+    result_tags: Optional[List[str]] = Field(None, description="Analysis tags")
+    result_mitre: Optional[List[str]] = Field(
+        None, description="MITRE ATT&CK techniques"
+    )
+    result_iocs: Optional[Dict[str, Any]] = Field(None, description="Extracted IOCs")
+    result_files: Optional[Dict[str, Any]] = Field(None, description="Generated files")
+    result_screenshots: Optional[Dict[str, Any]] = Field(
+        None, description="Screenshots"
+    )
+    result_pcap: Optional[Dict[str, Any]] = Field(None, description="Network traffic")
+    result_report: Optional[Dict[str, Any]] = Field(None, description="Analysis report")
+    result_summary: Optional[Dict[str, Any]] = Field(
+        None, description="Analysis summary"
+    )
+    result_errors: Optional[List[str]] = Field(None, description="Analysis errors")
+
+    # Additional information
+    user_id: Optional[str] = Field(None, description="User ID")
+    team_id: Optional[str] = Field(None, description="Team ID")
+    share_url: Optional[HttpUrl] = Field(None, description="Share URL")
+    report_url: Optional[HttpUrl] = Field(None, description="Report URL")
+    download_url: Optional[HttpUrl] = Field(None, description="Download URL")
+    pcap_url: Optional[HttpUrl] = Field(None, description="PCAP URL")
+    screenshots_url: Optional[HttpUrl] = Field(None, description="Screenshots URL")
+    files_url: Optional[HttpUrl] = Field(None, description="Files URL")
+    report_pdf_url: Optional[HttpUrl] = Field(None, description="PDF report URL")
+    report_json_url: Optional[HttpUrl] = Field(None, description="JSON report URL")
+    report_html_url: Optional[HttpUrl] = Field(None, description="HTML report URL")
+    report_xml_url: Optional[HttpUrl] = Field(None, description="XML report URL")
+    report_txt_url: Optional[HttpUrl] = Field(None, description="TXT report URL")
+    report_csv_url: Optional[HttpUrl] = Field(None, description="CSV report URL")
+    report_md_url: Optional[HttpUrl] = Field(None, description="Markdown report URL")
+    report_yaml_url: Optional[HttpUrl] = Field(None, description="YAML report URL")
+    report_stix_url: Optional[HttpUrl] = Field(None, description="STIX report URL")
+    report_misp_url: Optional[HttpUrl] = Field(None, description="MISP report URL")
+    report_openioc_url: Optional[HttpUrl] = Field(
+        None, description="OpenIOC report URL"
+    )
+    report_cybox_url: Optional[HttpUrl] = Field(None, description="CybOX report URL")
+    report_maec_url: Optional[HttpUrl] = Field(None, description="MAEC report URL")
+    report_cef_url: Optional[HttpUrl] = Field(None, description="CEF report URL")
+    report_leef_url: Optional[HttpUrl] = Field(None, description="LEEF report URL")

@@ -141,16 +141,19 @@ class RedisCache(CacheBackend):
     """Redis cache backend implementation."""
 
     def __init__(
-        self, redis: "Redis", prefix: str = "anyrun:", default_ttl: int = 300
+        self,
+        client: "Redis",
+        prefix: str = "anyrun:",
+        default_ttl: int = 300,
     ) -> None:
         """Initialize Redis cache.
 
         Args:
-            redis: Redis client instance
+            client: Redis client instance
             prefix: Key prefix
             default_ttl: Default TTL in seconds
         """
-        self.redis = redis
+        self.client = client
         self.prefix = prefix
         self.default_ttl = default_ttl
 
@@ -158,7 +161,7 @@ class RedisCache(CacheBackend):
         """Get prefixed key.
 
         Args:
-            key: Original key
+            key: Cache key
 
         Returns:
             str: Prefixed key
@@ -175,12 +178,12 @@ class RedisCache(CacheBackend):
             Any: Cached value or None if not found
         """
         try:
-            value = await self.redis.get(self._get_key(key))
+            value = await self.client.get(self._get_key(key))
             if value is None:
                 return None
             return json.loads(value)
         except Exception as e:
-            logger.error(f"Redis get error: {str(e)}")
+            logger.warning(f"Failed to get value from Redis cache: {e}")
             return None
 
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
@@ -192,10 +195,13 @@ class RedisCache(CacheBackend):
             ttl: Time to live in seconds
         """
         try:
-            ttl = ttl or self.default_ttl
-            await self.redis.set(self._get_key(key), json.dumps(value), ex=ttl)
+            await self.client.set(
+                self._get_key(key),
+                json.dumps(value),
+                ex=ttl or self.default_ttl,
+            )
         except Exception as e:
-            logger.error(f"Redis set error: {str(e)}")
+            logger.warning(f"Failed to set value in Redis cache: {e}")
 
     async def delete(self, key: str) -> None:
         """Delete value from Redis cache.
@@ -204,9 +210,9 @@ class RedisCache(CacheBackend):
             key: Cache key
         """
         try:
-            await self.redis.delete(self._get_key(key))
+            await self.client.delete(self._get_key(key))
         except Exception as e:
-            logger.error(f"Redis delete error: {str(e)}")
+            logger.warning(f"Failed to delete value from Redis cache: {e}")
 
     async def exists(self, key: str) -> bool:
         """Check if key exists in Redis cache.
@@ -218,9 +224,9 @@ class RedisCache(CacheBackend):
             bool: True if key exists, False otherwise
         """
         try:
-            return await self.redis.exists(self._get_key(key)) > 0
+            return bool(await self.client.exists(self._get_key(key)))
         except Exception as e:
-            logger.error(f"Redis exists error: {str(e)}")
+            logger.warning(f"Failed to check key existence in Redis cache: {e}")
             return False
 
 
@@ -342,6 +348,10 @@ def get_cache_key(prefix: str, *args: Any, **kwargs: Any) -> str:
     Returns:
         Generated cache key
     """
+    key_parts = [prefix]
+    key_parts.extend(str(arg) for arg in args)
+    key_parts.extend(f"{k}={v}" for k, v in sorted(kwargs.items()))
+    return ":".join(key_parts)
 
 
 def get_ttl(key: str, default: Optional[int] = None) -> Optional[int]:

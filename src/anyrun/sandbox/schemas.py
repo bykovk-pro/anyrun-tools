@@ -101,46 +101,50 @@ class StartFolder(str, Enum):
 
 
 class AnalysisRequest(BaseModel):
-    """Analysis request parameters."""
+    """Analysis request model."""
 
-    # Object parameters
-    obj_type: ObjectType = Field(
-        default=ObjectType.FILE, description="Type of new task"
-    )
-    file: Optional[bytes] = Field(None, description="Required when obj_type=file")
-    obj_url: Optional[HttpUrl] = Field(
-        None, description="Required when obj_type=url or obj_type=download"
-    )
-    task_rerun_uuid: Optional[str] = Field(
-        None, description="Required when obj_type=rerun"
-    )
+    # Object options
+    obj_type: ObjectType = Field(description="Object type")
+    obj_url: Optional[HttpUrl] = Field(None, description="Object URL")
+    obj_hash: Optional[str] = Field(None, description="Object hash")
+    obj_content: Optional[str] = Field(None, description="Object content")
+    obj_filename: Optional[str] = Field(None, description="Object filename")
 
-    # Environment parameters
-    env_os: Optional[OSType] = Field(
-        default=OSType.WINDOWS, description="Operation System"
-    )
-    env_version: Optional[str] = Field(None, description="OS version")
-    env_bitness: Optional[BitnessType] = Field(
-        default=BitnessType.X64, description="Bitness of Operation System"
-    )
-    env_type: Optional[EnvType] = None
-    env_locale: Optional[str] = Field(None, description="Operation system's language")
+    # Environment options
+    env_os: OSType = Field(description="Operating system type")
+    env_bitness: BitnessType = Field(description="Operating system bitness")
+    env_version: Optional[str] = Field(None, description="Operating system version")
+    env_type: EnvType = Field(description="Environment type")
+    env_browser: Optional[Browser] = Field(None, description="Browser type")
 
-    # Object execution parameters
-    obj_ext_cmd: Optional[str] = Field(
+    # Object extension options
+    obj_ext_runasadmin: Optional[bool] = Field(None, description="Run as admin")
+    obj_ext_runwithargs: Optional[str] = Field(None, description="Run with arguments")
+    obj_ext_runwithfile: Optional[str] = Field(None, description="Run with file")
+    obj_ext_runwithurl: Optional[HttpUrl] = Field(None, description="Run with URL")
+    obj_ext_runwithcontent: Optional[str] = Field(None, description="Run with content")
+    obj_ext_runwithfilename: Optional[str] = Field(
         None,
+        description="Run with filename",
         min_length=2,
         max_length=256,
-        description="Optional command line (Windows only)",
     )
-    obj_ext_browser: Optional[Browser] = None
-    obj_ext_useragent: Optional[str] = Field(
-        None, min_length=2, max_length=256, description="User agent for download type"
+    obj_ext_elevateprompt: Optional[bool] = Field(
+        None,
+        description="Windows only",
     )
-    obj_ext_elevateprompt: Optional[bool] = Field(None, description="Windows only")
-    obj_force_elevation: Optional[bool] = Field(None, description="Windows only")
-    auto_confirm_uac: Optional[bool] = Field(default=True, description="Windows only")
-    run_as_root: Optional[bool] = Field(default=False, description="Linux only")
+    obj_force_elevation: Optional[bool] = Field(
+        None,
+        description="Windows only",
+    )
+    auto_confirm_uac: Optional[bool] = Field(
+        default=True,
+        description="Windows only",
+    )
+    run_as_root: Optional[bool] = Field(
+        default=False,
+        description="Linux only",
+    )
     obj_ext_extension: Optional[bool] = None
     obj_ext_startfolder: Optional[StartFolder] = Field(
         default=StartFolder.TEMP, description="Start object folder"
@@ -168,30 +172,116 @@ class AnalysisRequest(BaseModel):
 
     # Advanced options
     opt_chatgpt: Optional[bool] = None
-    opt_automated_interactivity: Optional[bool] = Field(
-        default=True, description="Automated Interactivity (ML) option"
-    )
-
-    # Tags
-    user_tags: Optional[str] = Field(
-        None,
-        description=(
-            "Pattern: a-z, A-Z, 0-9, hyphen (-), comma (,). "
-            "Max length per tag: 16 chars, max tags: 8"
-        ),
-    )
 
     @model_validator(mode="after")
-    def validate_file_presence(self) -> "AnalysisRequest":
-        """Validate that file is present when obj_type is FILE."""
-        if self.obj_type == ObjectType.FILE and not self.file:
-            raise ValueError("file is required when obj_type is file")
-        if self.obj_type == ObjectType.URL and not self.obj_url:
-            raise ValueError("obj_url is required when obj_type is url")
-        if self.obj_type == ObjectType.DOWNLOAD and not self.obj_url:
-            raise ValueError("obj_url is required when obj_type is download")
-        if self.obj_type == ObjectType.RERUN and not self.task_rerun_uuid:
-            raise ValueError("task_rerun_uuid is required when obj_type is rerun")
+    def validate_request(self) -> "AnalysisRequest":
+        """Validate request.
+
+        Returns:
+            AnalysisRequest: Validated request
+
+        Raises:
+            ValueError: If request is invalid
+        """
+        # Validate object type
+        if self.obj_type == ObjectType.FILE:
+            if not self.obj_content:
+                raise ValueError("Object content is required for file analysis")
+            if not self.obj_filename:
+                raise ValueError("Object filename is required for file analysis")
+        elif self.obj_type == ObjectType.URL:
+            if not self.obj_url:
+                raise ValueError("Object URL is required for URL analysis")
+        elif self.obj_type == ObjectType.DOWNLOAD:
+            if not self.obj_url:
+                raise ValueError("Object URL is required for download analysis")
+        elif self.obj_type == ObjectType.RERUN:
+            if not self.obj_hash:
+                raise ValueError("Object hash is required for rerun analysis")
+
+        # Validate environment
+        if self.env_os == OSType.WINDOWS:
+            if self.env_version not in WindowsVersion._value2member_map_:
+                raise ValueError(
+                    "Invalid Windows version. Supported: "
+                    f"{list(WindowsVersion._value2member_map_.keys())}"
+                )
+            if (
+                self.env_version == WindowsVersion.WIN11
+                and self.env_bitness != BitnessType.X64
+            ):
+                raise ValueError("Windows 11 supports only 64-bit")
+            if (
+                self.env_type == EnvType.OFFICE
+                and self.env_version == WindowsVersion.WIN11
+            ):
+                raise ValueError("Windows 11 does not support office environment")
+            if self.run_as_root:
+                raise ValueError("Run as root is not supported for Windows")
+        elif self.env_os == OSType.LINUX:
+            if self.env_version not in LinuxVersion._value2member_map_:
+                raise ValueError(
+                    "Invalid Linux version. Supported: "
+                    f"{list(LinuxVersion._value2member_map_.keys())}"
+                )
+            if self.env_bitness != BitnessType.X64:
+                raise ValueError("Linux supports only 64-bit")
+            if self.env_type != EnvType.OFFICE:
+                raise ValueError("Linux supports only office environment")
+            if (
+                self.obj_ext_elevateprompt
+                or self.obj_force_elevation
+                or self.auto_confirm_uac
+            ):
+                raise ValueError("UAC options are not supported for Linux")
+
+        # Validate browser
+        if self.env_browser:
+            if self.env_os == OSType.WINDOWS:
+                if self.env_browser not in [
+                    Browser.CHROME,
+                    Browser.FIREFOX,
+                    Browser.IE,
+                    Browser.EDGE,
+                ]:
+                    raise ValueError(
+                        "Invalid browser for Windows. Supported: "
+                        "Google Chrome, Mozilla Firefox, Internet Explorer, Microsoft Edge"
+                    )
+            elif self.env_os == OSType.LINUX:
+                if self.env_browser not in [Browser.CHROME, Browser.FIREFOX]:
+                    raise ValueError(
+                        "Invalid browser for Linux. Supported: "
+                        "Google Chrome, Mozilla Firefox"
+                    )
+
+        # Validate start folder
+        if self.obj_ext_startfolder:
+            if self.env_os == OSType.WINDOWS:
+                if self.obj_ext_startfolder not in [
+                    StartFolder.APPDATA,
+                    StartFolder.DESKTOP,
+                    StartFolder.DOWNLOADS,
+                    StartFolder.HOME,
+                    StartFolder.ROOT,
+                    StartFolder.TEMP,
+                    StartFolder.WINDOWS,
+                ]:
+                    raise ValueError(
+                        "Invalid start folder for Windows. Supported: "
+                        "appdata, desktop, downloads, home, root, temp, windows"
+                    )
+            elif self.env_os == OSType.LINUX:
+                if self.obj_ext_startfolder not in [
+                    StartFolder.DESKTOP,
+                    StartFolder.DOWNLOADS,
+                    StartFolder.HOME,
+                    StartFolder.TEMP,
+                ]:
+                    raise ValueError(
+                        "Invalid start folder for Linux. Supported: desktop, downloads, home, temp"
+                    )
+
         return self
 
 

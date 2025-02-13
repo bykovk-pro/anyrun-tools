@@ -154,4 +154,4 @@ Configuration values are loaded in the following order (later values override ea
 
 - [Quick start guide](quickstart.md)
 - [API reference](https://any.run/api-documentation/)
-- [Examples](../examples/sandbox/analyze-file.py)
+- [Examples](https://github.com/bykovk-pro/anyrun-tools/tree/main/examples)

@@ -7,7 +7,7 @@ from typing import Any, AsyncGenerator, Callable, Dict, Optional, cast
 import httpx
 import pytest
 import respx
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 from anyrun import AnyRunClient
 from anyrun.config import BaseConfig
@@ -21,13 +21,9 @@ TEST_BASE_URL = "https://api.any.run"
 class MockResponse(BaseModel):
     """Mock response model."""
 
-    status_code: int = 200
-    headers: Dict[str, str] = {}
-    content: bytes = b"{}"
-
-    def json(self) -> Dict[str, Any]:
-        """Get JSON response."""
-        return cast(Dict[str, Any], json.loads(self.content.decode()))
+    error: bool = Field(description="Error flag")
+    data: Dict[str, Any] = Field(description="Response data")
+    message: Optional[str] = Field(None, description="Optional message")
 
 
 @pytest.fixture
@@ -108,3 +104,9 @@ def mock_response() -> Callable[..., httpx.Response]:
         )
 
     return _mock_response
+
+
+@pytest.fixture
+def mock_client() -> AnyRunClient:
+    """Create mock client."""
+    return AnyRunClient("test_key")
