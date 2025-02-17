@@ -1,9 +1,8 @@
 """Base client for ANY.RUN APIs."""
 
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, Optional, Union, cast, Type
 
 import httpx
-from httpx import URL
 from loguru import logger
 from pydantic import HttpUrl
 from redis.asyncio import Redis as AsyncRedis
@@ -57,19 +56,12 @@ class BaseClient:
             httpx.AsyncClient: HTTP client instance
         """
         if self._client is None:
-            transport = None
-            if self.config.proxies:
-                transport = httpx.AsyncHTTPTransport(
-                    proxy=URL(next(iter(self.config.proxies.values())))
-                )
-
             self._client = httpx.AsyncClient(
                 base_url=str(self.config.base_url),
                 timeout=self.config.timeout,
                 headers=self._get_default_headers(),
                 verify=self.config.verify_ssl,
                 follow_redirects=True,
-                transport=transport,
             )
         return self._client
 

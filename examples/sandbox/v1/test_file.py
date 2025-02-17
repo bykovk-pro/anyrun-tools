@@ -5,7 +5,7 @@ import json
 import os
 import tempfile
 from datetime import datetime
-from typing import Any
+from typing import Any, AsyncGenerator, Dict, Optional, Union, cast
 import traceback
 
 from anyrun import AnyRunClient
@@ -56,7 +56,7 @@ async def test_api() -> None:
         print("\n1. Getting user info and limits...")
         user_info = await client.sandbox.user_info()
         print("User info response:")
-        print(json.dumps(user_info.model_dump(), indent=2))
+        print(json.dumps(user_info.model_dump(), indent=2, default=json_serial))
 
         # 2. Get user presets
         print("\n2. Getting user presets...")
@@ -68,7 +68,7 @@ async def test_api() -> None:
         print("\n3. Getting available environments...")
         environments = await client.sandbox.get_environment()
         print("Environments response:")
-        print(json.dumps(environments.model_dump(), indent=2))
+        print(json.dumps(environments.model_dump(), indent=2, default=json_serial))
 
         # 4. Create a test file
         print("\n4. Creating test file...")
@@ -103,9 +103,9 @@ async def test_api() -> None:
                 run_as_root=False,
             )
             print("Analysis response:")
-            print(json.dumps(file_analysis.model_dump(), indent=2))
+            print(json.dumps(file_analysis.model_dump(), indent=2, default=json_serial))
 
-            # Используем taskid из ответа
+            # Use taskid from response
             task_id = file_analysis.data.taskid or file_analysis.data.task_id
             if task_id:
                 print(f"\nAnalysis submitted successfully! Task ID: {task_id}")
@@ -121,7 +121,7 @@ async def test_api() -> None:
                 task_stopped = False
                 try:
                     async for update in client.sandbox.get_analysis_status_stream(task_id):
-                        print(f"Status update: {json.dumps(update, indent=2)}")
+                        print(f"Status update: {json.dumps(update, indent=2, default=json_serial)}")
 
                         # Check if task is running
                         if update.get("task", {}).get("status") == 50 and not is_running:  # Running
@@ -168,25 +168,25 @@ async def test_api() -> None:
                 print("\n9. Getting analysis result...")
                 result = await client.sandbox.get_analysis(task_id)
                 print("Analysis result:")
-                print(json.dumps(result.model_dump(), indent=2))
+                print(json.dumps(result.model_dump(), indent=2, default=json_serial))
 
                 # 10. List recent analyses
                 print("\n10. Listing recent analyses...")
                 analyses = await client.sandbox.list_analyses(limit=5)
                 print("Recent analyses:")
-                print(json.dumps(analyses.model_dump(), indent=2))
+                print(json.dumps(analyses.model_dump(), indent=2, default=json_serial))
 
                 # 11. Delete analysis
                 print("\n11. Deleting analysis...")
                 try:
                     delete = await client.sandbox.delete_analysis(task_id)
                     print("\nDelete response:")
-                    print(json.dumps(delete.model_dump(), indent=2))
+                    print(json.dumps(delete.model_dump(), indent=2, default=json_serial))
                     
-                    # Проверяем список анализов после удаления
+                    # Check list of analyses after deletion
                     print("\nAnalyses after deletion:")
                     analyses_after = await client.sandbox.list_analyses(limit=5)
-                    print(json.dumps(analyses_after.model_dump(), indent=2))
+                    print(json.dumps(analyses_after.model_dump(), indent=2, default=json_serial))
                 except Exception as e:
                     print(f"Failed to delete analysis: {str(e)}")
                     traceback.print_exc()
@@ -194,7 +194,7 @@ async def test_api() -> None:
             else:
                 print("Warning: No task_id in response")
                 print("Raw response data:")
-                print(json.dumps(file_analysis.data.model_dump(), indent=2))
+                print(json.dumps(file_analysis.data.model_dump(), indent=2, default=json_serial))
 
         except Exception as e:
             print(f"Error during analysis submission: {str(e)}")

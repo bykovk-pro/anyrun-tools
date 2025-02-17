@@ -4,7 +4,7 @@ import asyncio
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, AsyncGenerator, Dict, Optional, Union, cast
 import traceback
 
 from anyrun import AnyRunClient
@@ -18,7 +18,6 @@ from anyrun.sandbox.v1.models.analysis import (
     StartFolder,
     WindowsVersion,
 )
-from pydantic import HttpUrl
 
 
 def json_serial(obj: Any) -> str:
@@ -32,8 +31,6 @@ def json_serial(obj: Any) -> str:
     """
     if isinstance(obj, datetime):
         return obj.isoformat()
-    if isinstance(obj, HttpUrl):
-        return str(obj)
     raise TypeError(f"Type {type(obj)} not serializable")
 
 
@@ -88,7 +85,7 @@ async def test_api() -> None:
             print("Analysis response:")
             print(json.dumps(url_analysis.model_dump(), indent=2))
 
-            # Используем taskid из ответа
+            # Use taskid from response
             task_id = url_analysis.data.taskid or url_analysis.data.task_id
             if task_id:
                 print(f"\nAnalysis submitted successfully! Task ID: {task_id}")
@@ -105,7 +102,7 @@ async def test_api() -> None:
                     task_stopped = False
 
                     async for update in client.sandbox.get_analysis_status_stream(task_id):
-                        print(f"Status update: {json.dumps(update, indent=2)}")
+                        print(f"Status update: {json.dumps(update, indent=2, default=json_serial)}")
 
                         # Check if task is running
                         if update.get("task", {}).get("status") == 50 and not is_running:  # Running
@@ -159,20 +156,20 @@ async def test_api() -> None:
                 print("\n9. Listing recent analyses...")
                 analyses = await client.sandbox.list_analyses(limit=5)
                 print("Recent analyses:")
-                print(json.dumps(analyses.model_dump(), indent=2))
+                print(json.dumps(analyses.model_dump(), indent=2, default=json_serial))
 
                 # 10. Delete analysis
                 print("\n10. Deleting analysis...")
                 try:
-                    # Используем uuid из первоначального ответа
+                    # Use uuid from initial response
                     delete = await client.sandbox.delete_analysis(task_id)
                     print("\nDelete response:")
                     print(json.dumps(delete.model_dump(), indent=2))
                     
-                    # Проверяем список анализов после удаления
+                    # Check list of analyses after deletion
                     print("\nAnalyses after deletion:")
                     analyses_after = await client.sandbox.list_analyses(limit=5)
-                    print(json.dumps(analyses_after.model_dump(), indent=2))
+                    print(json.dumps(analyses_after.model_dump(), indent=2, default=json_serial))
                 except Exception as e:
                     print(f"Failed to delete analysis: {str(e)}")
                     traceback.print_exc()
