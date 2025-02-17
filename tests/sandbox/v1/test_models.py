@@ -2,6 +2,7 @@
 
 import pytest
 from pydantic import HttpUrl, ValidationError
+from datetime import datetime
 
 from anyrun.sandbox.v1.models.analysis import (
     AnalysisListRequest,
@@ -17,12 +18,16 @@ from anyrun.sandbox.v1.models.analysis import (
     PrivacyType,
     StartFolder,
     WindowsVersion,
+    AnalysisData,
+    AnalysisListData,
+    AnalysisListItem,
 )
 from anyrun.sandbox.v1.models.environment import EnvironmentResponse
 from anyrun.sandbox.v1.models.user import (
     UserInfoRequest,
     UserInfoResponse,
     UserPresetsResponse,
+    UserPreset,
 )
 
 
@@ -158,18 +163,20 @@ def test_analysis_response_validation() -> None:
     # Valid response
     response = AnalysisResponse(
         error=False,
-        data={"task_id": "test123", "status": "queued"},
+        data=AnalysisData(task_id="test123", status="queued"),
+        message=None
     )
     assert response.error is False
-    assert response.data["task_id"] == "test123"
-
-    # Invalid response - error should be boolean
-    with pytest.raises(ValidationError):
-        AnalysisResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
+    assert response.data.task_id == "test123"
+    assert response.data.status == "queued"
 
     # Invalid response - data should be a dict
     with pytest.raises(ValidationError):
-        AnalysisResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
+        AnalysisResponse(error=False, data=AnalysisData(invalid="data"), message=None)
+
+    # Invalid response - missing required fields
+    with pytest.raises(ValidationError):
+        AnalysisResponse(error=False, data=AnalysisData(), message=None)
 
 
 def test_analysis_list_request_validation() -> None:
@@ -201,15 +208,42 @@ def test_analysis_list_response_validation() -> None:
     # Valid response
     response = AnalysisListResponse(
         error=False,
-        data={"items": [{"task_id": "test123", "status": "completed"}], "total": 1},
+        data=AnalysisListData(
+            tasks=[AnalysisListItem(
+                uuid="test123",
+                verdict="No threats detected",
+                name="test.exe",
+                related=None,
+                pcap=None,
+                file=None,
+                json=None,
+                misp=None,
+                date=None,
+                tags=[],
+                hashes=None
+            )]
+        ),
+        message=None
     )
     assert response.error is False
-    assert len(response.data["items"]) == 1
-    assert response.data["total"] == 1
+    assert len(response.data.tasks) == 1
+    assert response.data.tasks[0].uuid == "test123"
 
-    # Invalid response - data should be a dict
+    # Invalid response - data should be valid
     with pytest.raises(ValidationError):
-        AnalysisListResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
+        AnalysisListResponse(
+            error=False,
+            data=AnalysisListData(tasks=[]),
+            message=None
+        )
+
+    # Invalid response - missing required fields
+    with pytest.raises(ValidationError):
+        AnalysisListResponse(
+            error=False,
+            data=AnalysisListData(tasks=None),
+            message=None
+        )
 
 
 def test_environment_response_validation() -> None:
@@ -228,7 +262,11 @@ def test_environment_response_validation() -> None:
 
     # Invalid response - data should be a dict
     with pytest.raises(ValidationError):
-        EnvironmentResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
+        EnvironmentResponse(error=False, data={"invalid": "data"})
+
+    # Invalid response - missing required fields
+    with pytest.raises(ValidationError):
+        EnvironmentResponse(error=False, data={})
 
 
 def test_user_info_request_validation() -> None:
@@ -254,35 +292,136 @@ def test_user_info_response_validation() -> None:
 
     # Invalid response - data should be a dict
     with pytest.raises(ValidationError):
-        UserInfoResponse(error=False, data="not_a_dict")  # type: ignore[arg-type]
+        UserInfoResponse(error=False, data={})
+
+    # Invalid response - missing required fields
+    with pytest.raises(ValidationError):
+        UserInfoResponse(error=False, data={"invalid": "data"})
 
 
 def test_user_presets_response_validation() -> None:
     """Test user presets response validation."""
     # Valid response
+    preset = UserPreset(
+        _id="preset1",
+        name="Test Preset",
+        userId="user1",
+        userPlanName="pro",
+        createTime=datetime.now(),
+        os="windows",
+        version="10",
+        bitness=64,
+        type="clean",
+        browser="Google Chrome",
+        locale="en-US",
+        location="desktop",
+        netConnected=True,
+        network="default",
+        fakenet=False,
+        mitm=False,
+        netviator=False,
+        vpn=False,
+        openVPN="",
+        torGeo="",
+        residentialProxy=False,
+        residentialProxyGeo="",
+        timeout=300,
+        privacy="bylink",
+        hide_source=False,
+        extension=False,
+        autoclicker=False,
+        el=False,
+        noControls=False,
+        expirationTime=datetime.now().isoformat(),
+        expirationTimeSelected=False,
+    )
     response = UserPresetsResponse(
         error=False,
-        data=[
-            {
-                "id": "preset1",
-                "name": "Windows 10 x64",
-                "settings": {"env_os": "windows", "env_version": "10"},
-            },
-            {
-                "id": "preset2",
-                "name": "Linux Ubuntu",
-                "settings": {"env_os": "linux", "env_version": "22.04.2"},
-            },
-        ],
+        data=[preset],
     )
     assert response.error is False
-    assert len(response.data) == 2
-    assert response.data[0]["id"] == "preset1"
+    assert len(response.data) == 1
 
     # Invalid response - data should be a list
     with pytest.raises(ValidationError):
-        UserPresetsResponse(error=False, data="not_a_list")  # type: ignore[arg-type]
+        UserPresetsResponse(error=False, data=[])
 
-    # Invalid response - data should be a list of dicts with specific structure
+    # Invalid response - missing required fields
     with pytest.raises(ValidationError):
-        UserPresetsResponse(error=False, data=[{"invalid": "structure"}])
+        UserPresetsResponse(error=False, data=[])
+
+
+def test_user_preset_validation() -> None:
+    """Test user preset validation."""
+    # Valid preset
+    preset = UserPreset(
+        _id="preset1",
+        name="Test Preset",
+        userId="user1",
+        userPlanName="pro",
+        createTime=datetime.now(),
+        os="windows",
+        version="10",
+        bitness=64,
+        type="clean",
+        browser="Google Chrome",
+        locale="en-US",
+        location="desktop",
+        netConnected=True,
+        network="default",
+        fakenet=False,
+        mitm=False,
+        netviator=False,
+        vpn=False,
+        openVPN="",
+        torGeo="",
+        residentialProxy=False,
+        residentialProxyGeo="",
+        timeout=300,
+        privacy="bylink",
+        hide_source=False,
+        extension=False,
+        autoclicker=False,
+        el=False,
+        noControls=False,
+        expirationTime=datetime.now().isoformat(),
+        expirationTimeSelected=False,
+    )
+    assert preset.id == "preset1"
+    assert preset.name == "Test Preset"
+
+    # Invalid preset - missing required fields
+    with pytest.raises(ValidationError):
+        UserPreset(
+            _id="",
+            name="",
+            userId="",
+            userPlanName="",
+            createTime=datetime.now(),
+            os="",
+            version="",
+            bitness=0,
+            type="",
+            browser="",
+            locale="",
+            location="",
+            netConnected=False,
+            network="",
+            fakenet=False,
+            mitm=False,
+            netviator=False,
+            vpn=False,
+            openVPN="",
+            torGeo="",
+            residentialProxy=False,
+            residentialProxyGeo="",
+            timeout=0,
+            privacy="",
+            hide_source=False,
+            extension=False,
+            autoclicker=False,
+            el=False,
+            noControls=False,
+            expirationTime="",
+            expirationTimeSelected=False,
+        )

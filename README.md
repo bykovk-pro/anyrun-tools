@@ -6,6 +6,9 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/anyrun-tools.svg)](https://pypi.org/project/anyrun-tools/)
 [![License](https://img.shields.io/github/license/bykovk-pro/anyrun-tools.svg)](https://github.com/bykovk-pro/anyrun-tools/blob/main/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue)](http://mypy-lang.org/)
+[![Downloads](https://static.pepy.tech/badge/anyrun-tools)](https://pepy.tech/project/anyrun-tools)
+[![codecov](https://codecov.io/gh/bykovk-pro/anyrun-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/bykovk-pro/anyrun-tools)
 
 Python SDK for ANY.RUN APIs
 
@@ -103,9 +106,6 @@ pip install -e .[dev]
 # Install pre-commit hooks
 pre-commit install
 
-# Run tests
-./scripts/test.sh
-
 # Build documentation
 pip install -e .[docs]
 mkdocs serve
@@ -117,7 +117,6 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Run tests and linting (`./scripts/test.sh`)
 4. Commit your changes (`git commit -m 'Add amazing feature'`)
 5. Push to the branch (`git push origin feature/amazing-feature`)
 6. Open a Pull Request

@@ -1,6 +1,6 @@
 """Tests for Sandbox API v1 endpoints."""
 
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Any, AsyncIterator
 
 import httpx
 import pytest
@@ -12,7 +12,6 @@ from anyrun.sandbox.v1.endpoints import (
     ANALYSIS_GET,
     ANALYSIS_LIST,
     ANALYSIS_MONITOR,
-    ANALYSIS_STATUS,
     ENVIRONMENT_INFO,
 )
 from anyrun.sandbox.v1.models.analysis import (
@@ -20,7 +19,10 @@ from anyrun.sandbox.v1.models.analysis import (
     EnvType,
     OSType,
     WindowsVersion,
+    AnalysisResponse,
+    AnalysisListResponse,
 )
+from anyrun.sandbox.v1.models.environment import EnvironmentResponse
 
 
 def test_endpoints_format() -> None:
@@ -29,7 +31,6 @@ def test_endpoints_format() -> None:
         ANALYSIS_CREATE,
         ANALYSIS_GET,
         ANALYSIS_LIST,
-        ANALYSIS_STATUS,
         ANALYSIS_MONITOR,
         ENVIRONMENT_INFO,
     ]
@@ -41,8 +42,7 @@ def test_analysis_endpoints() -> None:
     """Test analysis endpoints format."""
     task_id = "test123"
     assert ANALYSIS_GET.format(task_id=task_id) == f"/v1/analysis/{task_id}"
-    assert ANALYSIS_STATUS.format(task_id=task_id) == f"/v1/analysis/{task_id}/status"
-    assert ANALYSIS_MONITOR.format(task_id=task_id) == f"/v1/analysis/{task_id}/monitor"
+    assert ANALYSIS_MONITOR.format(task_id=task_id) == f"/v1/analysis/monitor/{task_id}"
 
 
 def test_environment_endpoints() -> None:
@@ -57,7 +57,7 @@ def test_user_endpoints() -> None:
 
 @pytest.mark.asyncio
 async def test_analysis_create_endpoint(
-    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
+    mock_api: respx.Router, client: AsyncIterator[AnyRunClient]
 ) -> None:
     """Test analysis create endpoint."""
     mock_api.post(ANALYSIS_CREATE).mock(
@@ -75,6 +75,7 @@ async def test_analysis_create_endpoint(
             env_bitness=BitnessType.X64,
             env_type=EnvType.CLEAN,
         )
+        assert isinstance(response, AnalysisResponse)
         assert response.error is False
         assert response.data["task_id"] == "test123"
         assert response.data["status"] == "queued"
@@ -83,7 +84,7 @@ async def test_analysis_create_endpoint(
 
 @pytest.mark.asyncio
 async def test_analysis_get_endpoint(
-    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
+    mock_api: respx.Router, client: AsyncIterator[AnyRunClient]
 ) -> None:
     """Test analysis get endpoint."""
     task_id = "test123"
@@ -98,6 +99,7 @@ async def test_analysis_get_endpoint(
 
     async for c in client:
         response = await c.sandbox.get_analysis(task_id)
+        assert isinstance(response, AnalysisResponse)
         assert response.error is False
         assert response.data["task_id"] == task_id
         assert response.data["status"] == "completed"
@@ -124,33 +126,11 @@ async def test_analysis_list_endpoint(
 
     async for c in client:
         response = await c.sandbox.list_analyses()
+        assert isinstance(response, AnalysisListResponse)
         assert response.error is False
         assert len(response.data["items"]) == 1
         assert response.data["items"][0]["task_id"] == "test123"
         assert response.data["total"] == 1
-        break
-
-
-@pytest.mark.asyncio
-async def test_analysis_status_endpoint(
-    mock_api: respx.Router, client: AsyncGenerator[AnyRunClient, None]
-) -> None:
-    """Test analysis status endpoint."""
-    task_id = "test123"
-    endpoint = ANALYSIS_STATUS.format(task_id=task_id)
-
-    mock_api.get(endpoint).mock(
-        return_value=httpx.Response(
-            status_code=200,
-            json={"error": False, "data": {"status": "running", "progress": 50}},
-        )
-    )
-
-    async for c in client:
-        response = await c.sandbox.get_analysis_status(task_id)
-        assert response.error is False
-        assert response.data["status"] == "running"
-        assert response.data["progress"] == 50
         break
 
 
@@ -174,9 +154,10 @@ async def test_analysis_monitor_endpoint(
 
     async for c in client:
         response = await c.sandbox.get_analysis_monitor(task_id)
-        assert response.error is False
-        assert response.data["process"]["pid"] == 1234
-        assert response.data["process"]["name"] == "test.exe"
+        assert isinstance(response, dict)
+        assert not response["error"]
+        assert response["data"]["process"]["pid"] == 1234
+        assert response["data"]["process"]["name"] == "test.exe"
         break
 
 
@@ -200,6 +181,7 @@ async def test_environment_info_endpoint(
 
     async for c in client:
         response = await c.sandbox.get_environment()
+        assert isinstance(response, EnvironmentResponse)
         assert response.error is False
         assert "windows" in response.data
         assert "linux" in response.data

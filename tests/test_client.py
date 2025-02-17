@@ -1,9 +1,10 @@
 """Tests for ANY.RUN API client."""
 
-from typing import Type
+from typing import Any, Dict, Optional, Type, Tuple, cast
 
 import httpx
 import pytest
+from _pytest.fixtures import FixtureRequest
 import respx
 
 from anyrun import AnyRunClient
@@ -76,7 +77,7 @@ async def test_client_properties(config: BaseConfig) -> None:
     ],
 )
 async def test_client_error_handling(
-    mock_api: respx.MockRouter,
+    mock_api: respx.Router,
     config: BaseConfig,
     status_code: int,
     error_class: Type[APIError],
@@ -101,7 +102,7 @@ async def test_client_error_handling(
 
 
 @pytest.mark.asyncio
-async def test_client_retry(mock_api: respx.MockRouter, config: BaseConfig) -> None:
+async def test_client_retry(mock_api: respx.Router, config: BaseConfig) -> None:
     """Test client retry mechanism."""
     mock_api.get("/test").mock(
         side_effect=[
@@ -123,7 +124,7 @@ async def test_client_retry(mock_api: respx.MockRouter, config: BaseConfig) -> N
 
 @pytest.mark.asyncio
 async def test_client_rate_limit(
-    mock_api: respx.MockRouter, config: BaseConfig
+    mock_api: respx.Router, config: BaseConfig
 ) -> None:
     """Test client rate limiting."""
     mock_api.get("/test").mock(
@@ -146,7 +147,7 @@ async def test_client_rate_limit(
 
 
 @pytest.mark.asyncio
-async def test_client_caching(mock_api: respx.MockRouter, config: BaseConfig) -> None:
+async def test_client_caching(mock_api: respx.Router, config: BaseConfig) -> None:
     """Test client caching."""
     mock_api.get("/test").mock(
         return_value=httpx.Response(
@@ -172,7 +173,7 @@ async def test_client_caching(mock_api: respx.MockRouter, config: BaseConfig) ->
 
 
 @pytest.mark.asyncio
-async def test_client_headers(mock_api: respx.MockRouter, config: BaseConfig) -> None:
+async def test_client_headers(mock_api: respx.Router, config: BaseConfig) -> None:
     """Test client headers."""
     mock_api.get("/test").mock(
         return_value=httpx.Response(

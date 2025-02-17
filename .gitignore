@@ -67,6 +67,7 @@ dmypy.json
 docs/_build/
 site/
 docs/api/
+examples/sandbox/v1/schema.json
 
 # Logs
 *.log

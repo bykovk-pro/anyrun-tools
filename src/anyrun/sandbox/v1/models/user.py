@@ -1,6 +1,7 @@
 """User models for Sandbox API v1."""
 
-from typing import Any, Dict, List
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -21,51 +22,85 @@ class UserInfoResponse(BaseModel):
 class UserPreset(BaseModel):
     """User preset model."""
 
-    id: str = Field(description="Preset ID")
+    id: str = Field(alias="_id", description="Preset ID")
     name: str = Field(description="Preset name")
-    settings: Dict[str, Any] = Field(description="Preset settings")
+    user_id: str = Field(alias="userId", description="User ID")
+    user_plan_name: str = Field(alias="userPlanName", description="User plan name")
+    create_time: datetime = Field(alias="createTime", description="Creation time")
+
+    # Environment settings
+    os: str = Field(description="Operating system")
+    version: str = Field(description="OS version")
+    bitness: int = Field(description="OS bitness")
+    type: str = Field(description="Environment type")
+    browser: str = Field(description="Browser")
+    locale: str = Field(description="Locale")
+    location: str = Field(description="Start location")
+
+    # Network settings
+    net_connected: bool = Field(alias="netConnected", description="Network connected")
+    network: str = Field(description="Network type")
+    fakenet: bool = Field(description="FakeNet enabled")
+    mitm: bool = Field(description="MITM enabled")
+    netviator: bool = Field(description="Netviator enabled")
+    vpn: bool = Field(description="VPN enabled")
+    open_vpn: str = Field(alias="openVPN", description="OpenVPN configuration")
+    tor_geo: str = Field(alias="torGeo", description="TOR geography")
+    residential_proxy: bool = Field(
+        alias="residentialProxy", description="Residential proxy enabled"
+    )
+    residential_proxy_geo: str = Field(
+        alias="residentialProxyGeo", description="Residential proxy geography"
+    )
+
+    # Additional settings
+    timeout: int = Field(description="Timeout in seconds")
+    privacy: str = Field(description="Privacy type")
+    hide_source: bool = Field(alias="hide_source", description="Hide source")
+    extension: bool = Field(description="Extension enabled")
+    autoclicker: bool = Field(description="Autoclicker enabled")
+    el: bool = Field(description="Elevation prompt")
+    no_controls: bool = Field(alias="noControls", description="No controls")
+    expiration_time: str = Field(alias="expirationTime", description="Expiration time")
+    expiration_time_selected: bool = Field(
+        alias="expirationTimeSelected", description="Expiration time selected"
+    )
 
 
 class UserPresetsResponse(BaseModel):
     """User presets response."""
 
     error: bool = Field(description="Error flag")
-    data: List[Dict[str, Any]] = Field(description="List of user presets")
+    data: List[UserPreset] = Field(description="List of user presets")
 
-    @field_validator("data")
     @classmethod
-    def validate_presets(cls, v: List[Any]) -> List[Dict[str, Any]]:
-        """Validate presets data.
+    def model_validate(
+        cls,
+        obj: Any,
+        *,
+        strict: Optional[bool] = None,
+        from_attributes: Optional[bool] = None,
+        context: Optional[Any] = None,
+    ) -> "UserPresetsResponse":
+        """Validate and create model from raw data.
 
         Args:
-            v: List of presets
+            obj: Raw data from API
+            strict: Whether to enforce strict validation
+            from_attributes: Whether to extract data from object attributes
+            context: Optional context for validation
 
         Returns:
-            List[Dict[str, Any]]: Validated presets
-
-        Raises:
-            ValueError: If presets data is invalid
+            UserPresetsResponse: Validated model
         """
-        if not isinstance(v, list):
-            raise ValueError("Presets data must be a list")
-
-        for preset in v:
-            if not isinstance(preset, dict):
-                raise ValueError("Each preset must be a dictionary")
-            if "id" not in preset:
-                raise ValueError('Each preset must have an "id" field')
-            if "name" not in preset:
-                raise ValueError('Each preset must have a "name" field')
-            if "settings" not in preset:
-                raise ValueError('Each preset must have a "settings" field')
-
-        return v
-
-    @property
-    def presets(self) -> List[UserPreset]:
-        """Get presets as UserPreset objects.
-
-        Returns:
-            List[UserPreset]: List of user presets
-        """
-        return [UserPreset(**preset) for preset in self.data]
+        if isinstance(obj, list):
+            # API returns list of presets directly
+            return cls(error=False, data=[UserPreset.model_validate(item) for item in obj])
+        elif isinstance(obj, dict):
+            # API returns wrapped response
+            return cls(
+                error=obj["error"],
+                data=[UserPreset.model_validate(item) for item in obj["data"]],
+            )
+        else:
+            raise ValueError(f"Invalid response format: {type(obj)}")

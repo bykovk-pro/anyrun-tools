@@ -50,10 +50,7 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
    pre-commit install
    ```
 4. Make your changes
-5. Run tests and linting:
-   ```bash
-   ./scripts/test.sh
-   ```
+5. Run tests and linting
 6. Commit your changes:
    ```bash
    git commit -m 'Add amazing feature'

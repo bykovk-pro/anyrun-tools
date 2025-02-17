@@ -1,11 +1,13 @@
 """Tests for Sandbox API client."""
 
+from typing import Any, Dict, Optional, cast
+
 import httpx
 import pytest
 import respx
 from pydantic import HttpUrl
 
-from anyrun.sandbox.client import SandboxClient
+from anyrun.sandbox.v1.client import SandboxClientV1 as SandboxClient
 from anyrun.sandbox.v1.models.analysis import (
     AnalysisListResponse,
     AnalysisResponse,
@@ -27,22 +29,15 @@ async def test_sandbox_client_initialization() -> None:
     """Test sandbox client initialization."""
     client = SandboxClient(
         api_key="test_key",
-        version="v1",
         base_url=HttpUrl("https://api.any.run"),
         timeout=30,
         verify_ssl=True,
         proxies=None,
         user_agent=None,
         headers={},
-        cache_enabled=True,
-        cache_backend="memory",
-        cache_ttl=300,
-        rate_limit_enabled=True,
-        rate_limit_backend="memory",
     )
     assert client.api_key == "test_key"
-    assert client.version == "v1"
-    assert client.base_url == "https://api.any.run"
+    assert str(client.base_url) == "https://api.any.run"
 
 
 @pytest.mark.asyncio
@@ -151,24 +146,92 @@ async def test_sandbox_list_analyses(mock_api: respx.Router) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="SSE tests are not implemented yet")
 async def test_sandbox_get_analysis_status(mock_api: respx.Router) -> None:
     """Test sandbox get analysis status."""
-    mock_api.get("/analysis/status/test123").mock(
-        return_value=httpx.Response(
-            200,
-            json={
-                "error": False,
-                "data": {"task_id": "test123", "status": "running"},
-            },
-        )
+    mock_api.get("/v1/analysis/monitor/test123").mock(
+        side_effect=[
+            httpx.Response(
+                200,
+                json={
+                    "error": False,
+                    "data": {
+                        "task": {"status": 10, "message": "Queued"},
+                        "completed": False,
+                    },
+                },
+            ),
+            httpx.Response(
+                200,
+                json={
+                    "error": False,
+                    "data": {
+                        "task": {"status": 50, "message": "Running"},
+                        "completed": False,
+                    },
+                },
+            ),
+            httpx.Response(
+                200,
+                json={
+                    "error": False,
+                    "data": {
+                        "task": {"status": 100, "message": "Completed"},
+                        "completed": True,
+                    },
+                },
+            ),
+        ]
     )
 
     client = SandboxClient(api_key="test_key")
-    response = await client.get_analysis_status("test123")
-    assert response.error is False
-    assert response.data["task_id"] == "test123"
-    assert response.data["status"] == "running"
+    status_updates = []
+    async for update in client.get_analysis_status_stream("test123"):
+        status_updates.append(update)
+
+    assert len(status_updates) == 3
+    assert status_updates[0]["task"]["status"] == 10
+    assert status_updates[1]["task"]["status"] == 50
+    assert status_updates[2]["task"]["status"] == 100
+    assert status_updates[2]["completed"] is True
+
+
+@pytest.mark.asyncio
+async def test_sandbox_get_analysis_status_error(mock_api: respx.Router) -> None:
+    """Test sandbox get analysis status with error."""
+    mock_api.get("/v1/analysis/monitor/test123").mock(
+        side_effect=[
+            httpx.Response(
+                200,
+                json={
+                    "error": False,
+                    "data": {
+                        "task": {"status": 10, "message": "Queued"},
+                        "completed": False,
+                    },
+                },
+            ),
+            httpx.Response(
+                200,
+                json={
+                    "error": True,
+                    "data": {
+                        "task": {"status": -1, "message": "Error"},
+                        "completed": True,
+                    },
+                },
+            ),
+        ]
+    )
+
+    client = SandboxClient(api_key="test_key")
+    status_updates = []
+    async for update in client.get_analysis_status_stream("test123"):
+        status_updates.append(update)
+
+    assert len(status_updates) == 2
+    assert status_updates[0]["task"]["status"] == 10
+    assert status_updates[1]["task"]["status"] == -1
+    assert status_updates[1]["error"] is True
 
 
 @pytest.mark.asyncio

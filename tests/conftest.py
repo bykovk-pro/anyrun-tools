@@ -2,10 +2,11 @@
 
 import json
 from pathlib import Path
-from typing import Any, AsyncGenerator, Callable, Dict, Optional, cast
+from typing import Any, AsyncGenerator, Callable, Dict, Optional, cast, AsyncIterator, Generator
 
 import httpx
 import pytest
+from _pytest.fixtures import FixtureRequest
 import respx
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -27,14 +28,14 @@ class MockResponse(BaseModel):
 
 
 @pytest.fixture
-def mock_api() -> respx.Router:
+def mock_api(request: FixtureRequest) -> Generator[respx.Router, None, None]:
     """Mock API responses."""
     with respx.mock(base_url=TEST_BASE_URL, assert_all_called=False) as respx_mock:
         yield respx_mock
 
 
 @pytest.fixture
-def config() -> BaseConfig:
+def config(request: FixtureRequest) -> BaseConfig:
     """Get test configuration."""
     return BaseConfig(
         api_key=TEST_API_KEY,
@@ -70,13 +71,13 @@ async def client(config: BaseConfig) -> AsyncGenerator[AnyRunClient, None]:
 
 
 @pytest.fixture
-def fixtures_path() -> Path:
+def fixtures_path(request: FixtureRequest) -> Path:
     """Get path to test fixtures."""
     return Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture
-def load_fixture() -> Callable[[str], Dict[str, Any]]:
+def load_fixture(request: FixtureRequest) -> Callable[[str], Dict[str, Any]]:
     """Load test fixture."""
 
     def _load_fixture(name: str) -> Dict[str, Any]:
@@ -88,7 +89,7 @@ def load_fixture() -> Callable[[str], Dict[str, Any]]:
 
 
 @pytest.fixture
-def mock_response() -> Callable[..., httpx.Response]:
+def mock_response(request: FixtureRequest) -> Callable[..., httpx.Response]:
     """Create mock response."""
 
     def _mock_response(
@@ -109,6 +110,6 @@ def mock_response() -> Callable[..., httpx.Response]:
 
 
 @pytest.fixture
-def mock_client() -> AnyRunClient:
+def mock_client(request: FixtureRequest) -> AnyRunClient:
     """Create mock client."""
     return AnyRunClient("test_key")

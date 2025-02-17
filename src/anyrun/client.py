@@ -23,7 +23,8 @@ from .exceptions import (
     RateLimitError,
     ServerError,
 )
-from .sandbox import SandboxClient
+from .sandbox import create_sandbox_client
+from .sandbox.base import BaseSandboxClient
 from .ti_lookup import TILookupClient
 from .ti_yara import TIYaraClient
 from .types import CacheBackend, RetryStrategy
@@ -348,11 +349,15 @@ class AnyRunClient:
         self._base_client = BaseClient(self.config)
 
         # Initialize API clients
-        self.sandbox = SandboxClient(
+        self.sandbox = create_sandbox_client(
             api_key=api_key,
             version=sandbox_version,
-            cache_enabled=self.config.cache_enabled,
+            base_url=self.config.base_url,
             timeout=int(self.config.timeout),
+            verify_ssl=self.config.verify_ssl,
+            proxies=self.config.proxies,
+            user_agent=self.config.user_agent,
+            headers=self.config.headers,
         )
         self.ti_lookup = TILookupClient(
             api_key=api_key,

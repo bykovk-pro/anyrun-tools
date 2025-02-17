@@ -1,6 +1,6 @@
 """Configuration for ANY.RUN API client."""
 
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, TypeVar, Type
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
@@ -17,6 +17,9 @@ from .constants import (
     APIVersion,
 )
 from .types import CacheBackend, LogLevel, RateLimitBackend, RetryStrategy
+
+
+T = TypeVar("T", bound="BaseConfig")
 
 
 class BaseConfig(BaseModel):
@@ -88,7 +91,7 @@ class BaseConfig(BaseModel):
 
     @field_validator("base_url", mode="before")
     @classmethod
-    def validate_base_url(cls, v: Union[str, HttpUrl]) -> HttpUrl:
+    def validate_base_url(cls: Type[T], v: Union[str, HttpUrl]) -> HttpUrl:
         """Validate and convert base_url to HttpUrl."""
         if isinstance(v, str):
             return HttpUrl(v)

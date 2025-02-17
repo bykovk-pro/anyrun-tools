@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 from pydantic import (
     BaseModel,
@@ -12,6 +12,8 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
+from .task_status_update import TaskStatusDto
 
 
 class ObjectType(str, Enum):
@@ -108,84 +110,70 @@ class StartFolder(str, Enum):
     WINDOWS = "windows"  # Windows only
 
 
+class GeoLocation(str, Enum):
+    """Geographic location for TOR and residential proxy."""
+    FASTEST = "fastest"
+    AU = "AU"  # Australia
+    BR = "BR"  # Brazil
+    CH = "CH"  # Switzerland
+    DE = "DE"  # Germany
+    FR = "FR"  # France
+    GB = "GB"  # United Kingdom
+    IT = "IT"  # Italy
+    KR = "KR"  # South Korea
+    RU = "RU"  # Russia
+    US = "US"  # United States
+
+
 class AnalysisRequest(BaseModel):
     """Analysis request parameters."""
 
     # Object parameters
-    obj_type: ObjectType = Field(
-        default=ObjectType.FILE, description="Type of new task"
-    )
+    obj_type: ObjectType = Field(default=ObjectType.FILE, description="Type of new task")
     file: Optional[bytes] = Field(None, description="Required when obj_type=file")
-    obj_url: Optional[HttpUrl] = Field(
-        None, description="Required when obj_type=url or obj_type=download"
-    )
-    task_rerun_uuid: Optional[str] = Field(
-        None, description="Required when obj_type=rerun"
-    )
+    obj_url: Optional[HttpUrl] = Field(None, description="Required when obj_type=url or obj_type=download")
+    task_rerun_uuid: Optional[str] = Field(None, description="Required when obj_type=rerun")
 
     # Environment parameters
-    env_os: OSType = Field(default=OSType.WINDOWS, description="Operation System")
+    env_os: Optional[OSType] = Field(None, description="Operation System")
     env_version: Optional[str] = Field(None, description="OS version")
-    env_bitness: BitnessType = Field(
-        default=BitnessType.X64, description="Bitness of Operation System"
-    )
-    env_type: Optional[EnvType] = None
+    env_bitness: Optional[BitnessType] = Field(None, description="Bitness of Operation System")
+    env_type: Optional[EnvType] = Field(None, description="Environment type")
     env_locale: Optional[str] = Field(None, description="Operation system's language")
 
     # Object execution parameters
-    obj_ext_cmd: Optional[str] = Field(
-        None,
-        min_length=2,
-        max_length=256,
-        description="Optional command line (Windows only)",
-    )
-    obj_ext_browser: Optional[Browser] = None
-    obj_ext_useragent: Optional[str] = Field(
-        None, min_length=2, max_length=256, description="User agent for download type"
-    )
+    obj_ext_cmd: Optional[str] = Field(None, min_length=0, max_length=256, description="Optional command line (Windows only)")
+    obj_ext_browser: Optional[Browser] = Field(None, description="Browser type")
+    obj_ext_useragent: Optional[str] = Field(None, min_length=0, max_length=256, description="User agent for download type")
     obj_ext_elevateprompt: Optional[bool] = Field(None, description="Windows only")
     obj_force_elevation: Optional[bool] = Field(None, description="Windows only")
-    auto_confirm_uac: Optional[bool] = Field(default=True, description="Windows only")
-    run_as_root: Optional[bool] = Field(default=False, description="Linux only")
-    obj_ext_extension: Optional[bool] = None
-    obj_ext_startfolder: Optional[StartFolder] = Field(
-        default=StartFolder.TEMP, description="Start object folder"
-    )
+    auto_confirm_uac: Optional[bool] = Field(None, description="Windows only")
+    run_as_root: Optional[bool] = Field(None, description="Linux only")
+    obj_ext_extension: Optional[bool] = Field(None, description="Extension enabled")
+    obj_ext_startfolder: Optional[StartFolder] = Field(None, description="Start object folder")
 
     # Network options
-    opt_network_connect: Optional[bool] = Field(
-        default=True, description="Network connection state"
-    )
-    opt_network_fakenet: Optional[bool] = Field(
-        default=False, description="FakeNet feature status"
-    )
-    opt_network_tor: Optional[bool] = Field(default=False, description="TOR using")
-    opt_network_mitm: Optional[bool] = Field(
-        default=False, description="HTTPS MITM proxy option"
-    )
+    opt_network_connect: Optional[bool] = Field(None, description="Network connection state")
+    opt_network_fakenet: Optional[bool] = Field(None, description="FakeNet feature status")
+    opt_network_tor: Optional[bool] = Field(None, description="TOR using")
+    opt_network_geo: Optional[GeoLocation] = Field(None, description="Geographic location for TOR traffic")
+    opt_network_mitm: Optional[bool] = Field(None, description="HTTPS MITM proxy option")
+    opt_network_residential_proxy: Optional[bool] = Field(None, description="Residential proxy for network traffic")
+    opt_network_residential_proxy_geo: Optional[GeoLocation] = Field(None, description="Geographic location for residential proxy")
+
+    # Timeout options
+    opt_timeout: Optional[int] = Field(None, ge=10, le=1200, description="Execution time in seconds (10-1200)")
 
     # Privacy options
-    opt_privacy_type: Optional[PrivacyType] = Field(
-        default=PrivacyType.BYLINK, description="Privacy settings"
-    )
-    opt_privacy_hidesource: Optional[bool] = Field(
-        default=False, description="Option for hiding source URL"
-    )
+    opt_privacy_type: Optional[PrivacyType] = Field(None, description="Privacy settings")
+    opt_privacy_hidesource: Optional[bool] = Field(None, description="Option for hiding source URL")
 
     # Advanced options
-    opt_chatgpt: Optional[bool] = None
-    opt_automated_interactivity: Optional[bool] = Field(
-        default=True, description="Automated Interactivity (ML) option"
-    )
+    opt_chatgpt: Optional[bool] = Field(None, description="ChatGPT option")
+    opt_automated_interactivity: Optional[bool] = Field(None, description="Automated Interactivity (ML) option")
 
     # Tags
-    user_tags: Optional[str] = Field(
-        None,
-        description=(
-            "Pattern: a-z, A-Z, 0-9, hyphen (-), comma (,). "
-            "Max length per tag: 16 chars, max tags: 8"
-        ),
-    )
+    user_tags: Optional[str] = Field(None, description="Pattern: a-z, A-Z, 0-9, hyphen (-), comma (,). Max length per tag: 16 chars, max tags: 8")
 
     @model_validator(mode="after")
     def validate_required_fields(self) -> "AnalysisRequest":
@@ -198,85 +186,75 @@ class AnalysisRequest(BaseModel):
             raise ValueError("task_rerun_uuid is required when obj_type is rerun")
         return self
 
-    @field_validator("env_version")
-    @classmethod
-    def validate_os_version(
-        cls, v: Optional[str], info: ValidationInfo
-    ) -> Optional[str]:
-        """Validate OS version based on env_os."""
-        if not v:
-            return v
-        env_os = info.data.get("env_os")
-        if env_os == OSType.WINDOWS:
-            if v not in [ver.value for ver in WindowsVersion]:
-                raise ValueError("Invalid Windows version")
-        elif env_os == OSType.LINUX:
-            if v not in [ver.value for ver in LinuxVersion]:
-                raise ValueError("Invalid Linux version")
-        return v
 
-    @field_validator("env_type")
-    @classmethod
-    def validate_env_type(
-        cls, v: Optional[EnvType], info: ValidationInfo
-    ) -> Optional[EnvType]:
-        """Validate environment type based on OS."""
-        if not v:
-            return v
-        env_os = info.data.get("env_os")
-        if env_os == OSType.LINUX and v != EnvType.OFFICE:
-            raise ValueError('Only "office" environment type is allowed for Linux')
-        return v
+class TaskScoresDto(BaseModel):
+    """Task scores model."""
+    specs: Dict[str, bool] = Field(description="Task specifications")
+    verdict: Dict[str, Any] = Field(description="Task verdict")
 
-    @field_validator("env_bitness")
-    @classmethod
-    def validate_bitness(cls, v: BitnessType, info: ValidationInfo) -> BitnessType:
-        """Validate bitness based on OS and version."""
-        env_os = info.data.get("env_os")
-        env_version = info.data.get("env_version")
-        if env_os == OSType.LINUX and v != BitnessType.X64:
-            raise ValueError("Only 64-bit is supported for Linux")
-        if env_os == OSType.WINDOWS:
-            if env_version == WindowsVersion.WIN11.value and v != BitnessType.X64:
-                raise ValueError("Only 64-bit is supported for Windows 11")
-        return v
 
-    @field_validator("obj_ext_browser")
-    @classmethod
-    def validate_browser(
-        cls, v: Optional[Browser], info: ValidationInfo
-    ) -> Optional[Browser]:
-        """Validate browser based on OS."""
-        if not v:
-            return v
-        env_os = info.data.get("env_os")
-        if env_os == OSType.LINUX and v not in (Browser.CHROME, Browser.FIREFOX):
-            raise ValueError("Only Chrome and Firefox are supported for Linux")
-        return v
+class TaskPublicDto(BaseModel):
+    """Task public information model."""
+    maxAddedTimeReached: bool = Field(description="Maximum allowed task runtime reached")
+    objects: Dict[str, Any] = Field(description="Task objects information")
+    options: Dict[str, Any] = Field(description="Task options")
+    environment: Dict[str, Any] = Field(description="Task environment information")
 
-    @field_validator("obj_ext_startfolder")
-    @classmethod
-    def validate_startfolder(
-        cls, v: Optional[StartFolder], info: ValidationInfo
-    ) -> Optional[StartFolder]:
-        """Validate start folder based on OS."""
-        if not v:
-            return v
-        env_os = info.data.get("env_os")
-        if env_os == OSType.LINUX and v in (
-            StartFolder.APPDATA,
-            StartFolder.ROOT,
-            StartFolder.WINDOWS,
-        ):
-            raise ValueError(f"Start folder {v} is not supported for Linux")
-        return v
+
+class TaskStatusUpdateDto(BaseModel):
+    """Task status update model."""
+    task: TaskStatusDto = Field(description="Task status information")
+    completed: bool = Field(description="Task completion status")
+    error: bool = Field(description="Error status")
+
+
+class AnalysisData(BaseModel):
+    """Analysis data model."""
+    taskid: Optional[str] = Field(None, description="Task ID (used in create response)")
+    task_id: Optional[str] = Field(None, description="Task ID (used in status response)")
+    status: Optional[str] = Field(None, description="Task status")
+    completed: Optional[bool] = Field(None, description="Task completion status")
+    verdict: Optional[Dict[str, Any]] = Field(None, description="Analysis verdict")
+    task: Optional[TaskStatusDto] = Field(None, description="Task status information")
+
+    @model_validator(mode="after")
+    def convert_taskid(self) -> "AnalysisData":
+        """Convert taskid to task_id if needed."""
+        if self.taskid and not self.task_id:
+            self.task_id = self.taskid
+            self.taskid = None
+        return self
+
+    def model_dump(self, **kwargs: Any) -> Dict[str, Any]:
+        """Override model_dump to handle special fields.
+
+        Args:
+            **kwargs: Additional arguments passed to model_dump
+
+        Returns:
+            Dict[str, Any]: Serialized model data
+        """
+        data = super().model_dump(**kwargs)
+        # Convert data to mutable dict if it's not
+        if not isinstance(data, dict):
+            data = dict(data)
+        return data
 
 
 class AnalysisResponse(BaseModel):
     """Analysis response."""
+    error: bool = Field(description="Error flag")
+    data: AnalysisData = Field(description="Response data")
+    message: Optional[str] = Field(None, description="Error message")
 
-    error: bool
-    data: dict
+    @model_validator(mode="after")
+    def validate_data(self) -> "AnalysisResponse":
+        """Validate response data."""
+        data_dict = self.data.model_dump()
+        if not self.error and "taskid" in data_dict and data_dict["taskid"]:
+            self.data.task_id = data_dict["taskid"]
+            self.data.taskid = None
+        return self
 
 
 class AnalysisListRequest(BaseModel):
@@ -289,11 +267,57 @@ class AnalysisListRequest(BaseModel):
     limit: int = Field(default=25, ge=1, le=100, description="Number of items per page")
 
 
+class AnalysisListItem(BaseModel):
+    """Analysis list item model."""
+    uuid: str = Field(description="Task UUID")
+    verdict: Optional[str] = Field(None, description="Analysis verdict")
+    name: Optional[str] = Field(None, description="Name of the main object")
+    related: Optional[HttpUrl] = Field(None, description="URL of the main analysis report")
+    pcap: Optional[HttpUrl] = Field(None, description="URL for downloading PCAP file")
+    file: Optional[HttpUrl] = Field(None, description="URL for downloading the main object")
+    json: Optional[HttpUrl] = Field(None, description="URL of the JSON report")
+    misp: Optional[HttpUrl] = Field(None, description="URL of the MISP report")
+    date: Optional[datetime] = Field(None, description="Analysis creation timestamp")
+    tags: List[str] = Field(default=[], description="Analysis tags")
+    hashes: Optional[Dict[str, str]] = Field(None, description="Object hashes")
+
+
+class AnalysisListData(BaseModel):
+    """Analysis list data model."""
+    tasks: List[AnalysisListItem] = Field(description="List of analysis items")
+
+
 class AnalysisListResponse(BaseModel):
     """Analysis list response."""
+    error: bool = Field(description="Error flag")
+    data: AnalysisListData = Field(description="Response data")
+    message: Optional[str] = Field(None, description="Error message")
 
-    error: bool
-    data: dict
+    def model_dump(self, **kwargs: Any) -> Dict[str, Any]:
+        """Override model_dump to handle HttpUrl and datetime serialization.
+
+        Args:
+            **kwargs: Additional arguments passed to model_dump
+
+        Returns:
+            Dict[str, Any]: Serialized model data
+        """
+        data = super().model_dump(**kwargs)
+        if "data" in data and "tasks" in data["data"]:
+            for item in data["data"]["tasks"]:
+                if "related" in item and item["related"]:
+                    item["related"] = str(item["related"])
+                if "pcap" in item and item["pcap"]:
+                    item["pcap"] = str(item["pcap"])
+                if "file" in item and item["file"]:
+                    item["file"] = str(item["file"])
+                if "json" in item and item["json"]:
+                    item["json"] = str(item["json"])
+                if "misp" in item and item["misp"]:
+                    item["misp"] = str(item["misp"])
+                if "date" in item and item["date"]:
+                    item["date"] = item["date"].isoformat()
+        return data
 
 
 class AddTimeResponse(BaseModel):
@@ -306,15 +330,16 @@ class AddTimeResponse(BaseModel):
 class StopAnalysisResponse(BaseModel):
     """Stop analysis response."""
 
-    error: bool
-    data: dict
+    error: bool = Field(description="Error flag")
+    message: str = Field(description="Response message")
 
 
 class DeleteAnalysisResponse(BaseModel):
     """Delete analysis response."""
 
-    error: bool
-    data: dict
+    error: bool = Field(description="Error flag")
+    message: str = Field(description="Response message")
+    data: Optional[Dict[str, Any]] = Field(None, description="Optional response data")
 
 
 class AnalysisStatus(str, Enum):
@@ -331,9 +356,44 @@ class AnalysisStatus(str, Enum):
 class AnalysisResult(BaseModel):
     """Analysis result model."""
 
-    # Basic information
+    # Analysis information
     uuid: str = Field(description="Analysis UUID")
-    status: AnalysisStatus = Field(description="Analysis status")
+    permanentUrl: HttpUrl = Field(description="URL of the main analysis report")
+    duration: int = Field(description="Duration of the analysis in seconds")
+    creation: int = Field(description="Timestamp of the analysis creation")
+    creationText: str = Field(description="Human-readable timestamp of the analysis creation")
+    stopExec: Optional[int] = Field(None, description="Timestamp of the analysis completion")
+    stopExecText: Optional[str] = Field(None, description="Human-readable timestamp of the analysis completion")
+
+    # Reports
+    reports: Dict[str, HttpUrl] = Field(description="URLs of various report formats")
+    tags: List[str] = Field(default=[], description="Analysis tags")
+
+    # Sandbox information
+    sandbox: Dict[str, Any] = Field(description="Sandbox information")
+    options: Dict[str, Any] = Field(description="Analysis options")
+    scores: Dict[str, Any] = Field(description="Analysis scores")
+
+    # Content
+    content: Dict[str, Any] = Field(description="Analysis content")
+
+    # Environment
+    environments: Dict[str, Any] = Field(description="Environment information")
+    counters: Dict[str, Any] = Field(description="Analysis counters")
+
+    # Results
+    processes: List[Dict[str, Any]] = Field(default=[], description="Process information")
+    network: Dict[str, Any] = Field(description="Network activity")
+    modified: Dict[str, Any] = Field(description="Modified files and registry")
+    incidents: List[Dict[str, Any]] = Field(default=[], description="Detected incidents")
+    mitre: List[Dict[str, Any]] = Field(default=[], description="MITRE ATT&CK information")
+    malconf: List[Dict[str, Any]] = Field(default=[], description="Malware configuration")
+    debugStrings: List[Dict[str, Any]] = Field(default=[], description="Debug strings")
+
+    # Status
+    status: str = Field(description="Task completion status")
+
+    # Basic information
     created_at: datetime = Field(description="Creation timestamp")
     started_at: Optional[datetime] = Field(None, description="Start timestamp")
     completed_at: Optional[datetime] = Field(None, description="Completion timestamp")
@@ -358,7 +418,11 @@ class AnalysisResult(BaseModel):
     opt_network_connect: bool = Field(description="Network connection state")
     opt_network_fakenet: bool = Field(description="FakeNet feature status")
     opt_network_tor: bool = Field(description="TOR using")
+    opt_network_geo: Optional[str] = None
     opt_network_mitm: bool = Field(description="HTTPS MITM proxy option")
+    opt_network_residential_proxy: Optional[bool] = None
+    opt_network_residential_proxy_geo: Optional[str] = None
+    opt_timeout: Optional[int] = None
     opt_privacy_type: PrivacyType = Field(description="Privacy settings")
     opt_privacy_hidesource: bool = Field(description="Option for hiding source URL")
     opt_chatgpt: Optional[bool] = None
@@ -411,3 +475,27 @@ class AnalysisResult(BaseModel):
     report_maec_url: Optional[HttpUrl] = Field(None, description="MAEC report URL")
     report_cef_url: Optional[HttpUrl] = Field(None, description="CEF report URL")
     report_leef_url: Optional[HttpUrl] = Field(None, description="LEEF report URL")
+
+
+class FileAnalysisRequest(AnalysisRequest):
+    """File analysis request parameters."""
+    obj_type: ObjectType = Field(default=ObjectType.FILE, frozen=True, description="Type of new task")
+    file: bytes = Field(description="File content")
+
+
+class URLAnalysisRequest(AnalysisRequest):
+    """URL analysis request parameters."""
+    obj_type: ObjectType = Field(default=ObjectType.URL, frozen=True, description="Type of new task")
+    obj_url: HttpUrl = Field(description="Target URL")
+
+
+class DownloadAnalysisRequest(AnalysisRequest):
+    """Download analysis request parameters."""
+    obj_type: ObjectType = Field(default=ObjectType.DOWNLOAD, frozen=True, description="Type of new task")
+    obj_url: HttpUrl = Field(description="URL to download and analyze")
+
+
+class RerunAnalysisRequest(AnalysisRequest):
+    """Rerun analysis request parameters."""
+    obj_type: ObjectType = Field(default=ObjectType.RERUN, frozen=True, description="Type of new task")
+    task_rerun_uuid: str = Field(description="Task UUID to rerun")
