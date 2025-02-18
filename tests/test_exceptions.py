@@ -90,4 +90,4 @@ def test_error_with_cause() -> None:
     cause = ValueError("Original error")
     error = APIError("API error", cause=cause)
     assert str(error) == "API error"
-    assert error.__cause__ == cause 
+    assert error.__cause__ == cause

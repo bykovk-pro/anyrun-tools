@@ -11,7 +11,7 @@ from typing import Awaitable, Callable, TypeVar
 from loguru import logger
 from typing_extensions import ParamSpec
 
-from anyrun.exceptions import APIError, RetryError, ServerError
+from anyrun.exceptions import APIError, RetryError, ServerError, RateLimitError
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -98,6 +98,20 @@ def retry(
             while attempt <= max_attempts:
                 try:
                     return await func(*args, **kwargs)
+                except RateLimitError as exc:
+                    last_error = exc
+                    if attempt >= max_attempts:
+                        break
+
+                    # Use retry_after from RateLimitError
+                    current_delay = exc.retry_after
+                    logger.debug(
+                        f"Attempt {attempt} failed with RateLimitError. "
+                        f"Retrying in {current_delay:.2f} seconds..."
+                    )
+
+                    await asyncio.sleep(current_delay)
+                    attempt += 1
                 except (ServerError, APIError) as exc:
                     last_error = exc
                     if attempt >= max_attempts:

@@ -190,4 +190,4 @@ def test_base_config_retry_strategy_validation() -> None:
             api_key="test_key",
             base_url=HttpUrl("https://api.any.run"),
             retry_strategy="invalid",  # type: ignore
-        ) 
+        )

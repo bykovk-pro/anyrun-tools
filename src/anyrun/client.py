@@ -317,7 +317,6 @@ class AnyRunClient:
         self.config = BaseConfig(
             api_key=api_key,
             base_url=HttpUrl(API_BASE_URL),
-            proxies={},
             timeout=kwargs.get("timeout", DEFAULT_TIMEOUT),
             user_agent=kwargs.get("user_agent", DEFAULT_USER_AGENT),
             verify_ssl=kwargs.get("verify_ssl", True),
@@ -338,7 +337,6 @@ class AnyRunClient:
             base_url=self.config.base_url,
             timeout=int(self.config.timeout),
             verify_ssl=self.config.verify_ssl,
-            proxies=self.config.proxies,
             user_agent=self.config.user_agent,
             headers=self.config.headers,
         )

@@ -102,21 +102,32 @@ class RateLimiter:
             state["tokens"] -= float(tokens)
 
     async def check(self, tokens: int = 1) -> bool:
-        """Check if tokens are available without consuming them.
+        """Check if tokens are available and consume them if available.
 
         Args:
             tokens: Number of tokens to check
 
         Returns:
-            bool: True if tokens are available, False otherwise
+            bool: True if tokens are available and consumed, False otherwise
         """
         try:
             state = self._state[self.key]
             async with state["lock"]:
                 now = time.monotonic()
                 time_passed = now - state["last_update"]
-                available = min(state["tokens"] + time_passed * self.rate, float(self.burst))
-                return available >= tokens
+
+                # Add new tokens based on time passed
+                new_tokens = time_passed * self.rate
+                state["tokens"] = min(state["tokens"] + new_tokens, float(self.burst))
+                state["last_update"] = now
+
+                # Check if we have enough tokens
+                if state["tokens"] < tokens:
+                    return False
+
+                # Consume tokens
+                state["tokens"] -= float(tokens)
+                return True
         except Exception:
             return False
 

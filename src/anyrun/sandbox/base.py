@@ -25,7 +25,6 @@ class BaseSandboxClient(Generic[A, L, E], ABC):
         base_url: Optional[HttpUrl] = None,
         timeout: Optional[int] = None,
         verify_ssl: bool = True,
-        proxies: Optional[Dict[str, str]] = None,
         user_agent: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
     ) -> None:
@@ -36,7 +35,6 @@ class BaseSandboxClient(Generic[A, L, E], ABC):
             base_url: Base URL for API requests
             timeout: Request timeout in seconds
             verify_ssl: Verify SSL certificates
-            proxies: HTTP/HTTPS proxies
             user_agent: User agent string
             headers: Additional headers
         """
@@ -45,7 +43,6 @@ class BaseSandboxClient(Generic[A, L, E], ABC):
             base_url=base_url or HttpUrl(API_BASE_URL),
             timeout=timeout or DEFAULT_TIMEOUT,
             verify_ssl=verify_ssl,
-            proxies=proxies or {},
             user_agent=user_agent or DEFAULT_USER_AGENT,
             headers=headers or {},
         )
@@ -59,7 +56,7 @@ class BaseSandboxClient(Generic[A, L, E], ABC):
         """
         if self._client is None:
             self._client = httpx.AsyncClient(
-                base_url=self.config.base_url,
+                base_url=str(self.config.base_url),
                 timeout=self.config.timeout,
                 follow_redirects=True,
                 verify=self.config.verify_ssl,

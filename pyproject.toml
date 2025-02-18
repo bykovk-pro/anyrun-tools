@@ -84,6 +84,44 @@ exclude = [
 ]
 src_paths = ["src/anyrun"]
 
+[tool.coverage.run]
+source = ["src/anyrun"]
+branch = true
+parallel = true
+concurrency = ["thread", "multiprocessing"]
+data_file = ".coverage"
+
+[tool.coverage.paths]
+source = [
+    "src/anyrun",
+    "*/site-packages/anyrun"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
+ignore_errors = true
+omit = [
+    "tests/*",
+    "setup.py",
+]
+show_missing = true
+skip_covered = true
+sort = "Cover"
+
+[tool.coverage.html]
+directory = "coverage_html"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

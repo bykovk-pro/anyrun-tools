@@ -80,4 +80,4 @@ def test_validate_model_extra_field() -> None:
         "extra": "field",  # Extra field
     }
     result = validate_model(TestModel, data)
-    assert not hasattr(result, "extra")  # Extra field should be ignored 
+    assert not hasattr(result, "extra")  # Extra field should be ignored

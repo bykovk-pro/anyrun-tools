@@ -14,7 +14,6 @@ def create_sandbox_client(
     base_url: Optional[HttpUrl] = None,
     timeout: Optional[int] = None,
     verify_ssl: bool = True,
-    proxies: Optional[Dict[str, str]] = None,
     user_agent: Optional[str] = None,
     headers: Optional[Dict[str, str]] = None,
 ) -> BaseSandboxClient:
@@ -26,7 +25,6 @@ def create_sandbox_client(
         base_url: Base URL for API requests
         timeout: Request timeout in seconds
         verify_ssl: Verify SSL certificates
-        proxies: HTTP/HTTPS proxies
         user_agent: User agent string
         headers: Additional headers
 
@@ -42,7 +40,6 @@ def create_sandbox_client(
             base_url=base_url,
             timeout=timeout,
             verify_ssl=verify_ssl,
-            proxies=proxies,
             user_agent=user_agent,
             headers=headers,
         )

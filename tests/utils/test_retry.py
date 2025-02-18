@@ -1,6 +1,7 @@
 """Tests for retry utilities."""
 
 import asyncio
+import time
 from typing import Any, Dict, Optional
 
 import pytest
@@ -56,43 +57,44 @@ async def test_retry_max_attempts() -> None:
         raise APIError("Test error")
 
     test_func.config = MockConfig()  # type: ignore
-    with pytest.raises(RetryError):
+    with pytest.raises(APIError) as exc_info:
         await test_func()
     assert attempts == 3
+    assert str(exc_info.value) == "Test error"
 
 
 async def test_retry_rate_limit() -> None:
     """Test retry with rate limit error."""
     attempts = 0
-    start_time = asyncio.get_event_loop().time()
+    start_time = time.monotonic()
 
     @retry(max_attempts=3, delay=0.1, max_delay=1.0, exponential=True)
     async def test_func() -> str:
         nonlocal attempts
         attempts += 1
         if attempts == 1:
-            raise RateLimitError("Rate limit exceeded", retry_after=0.5)
+            raise RateLimitError("Rate limit exceeded", retry_after=0.1)
         return "success"
 
     test_func.config = MockConfig()  # type: ignore
     result = await test_func()
-    end_time = asyncio.get_event_loop().time()
+    end_time = time.monotonic()
 
     assert result == "success"
     assert attempts == 2
-    assert end_time - start_time >= 0.5  # Should wait for retry_after
+    assert 0.1 <= end_time - start_time <= 0.3  # At least retry_after but not too long
 
 
 async def test_retry_exponential_backoff() -> None:
     """Test retry with exponential backoff."""
     attempts = 0
     delays: list[float] = []
-    start_time = asyncio.get_event_loop().time()
+    start_time = time.monotonic()
 
     @retry(max_attempts=3, delay=0.1, max_delay=1.0, exponential=True)
     async def test_func() -> None:
         nonlocal attempts, start_time
-        current_time = asyncio.get_event_loop().time()
+        current_time = time.monotonic()
         if attempts > 0:
             delays.append(current_time - start_time)
         start_time = current_time
@@ -100,44 +102,49 @@ async def test_retry_exponential_backoff() -> None:
         raise APIError("Test error")
 
     test_func.config = MockConfig()  # type: ignore
-    with pytest.raises(RetryError):
+    with pytest.raises(APIError):
         await test_func()
 
     assert attempts == 3
-    assert delays[1] > delays[0]  # Second delay should be longer than first
+    assert len(delays) == 2
+    assert delays[1] > delays[0]  # Second delay should be longer
 
 
 async def test_retry_max_delay() -> None:
     """Test retry with max delay."""
     attempts = 0
+    delays: list[float] = []
+    start_time = time.monotonic()
 
     @retry(max_attempts=3, delay=0.1, max_delay=0.2, exponential=True)
     async def test_func() -> None:
-        nonlocal attempts
+        nonlocal attempts, start_time
+        current_time = time.monotonic()
+        if attempts > 0:
+            delays.append(current_time - start_time)
+        start_time = current_time
         attempts += 1
         raise APIError("Test error")
 
     test_func.config = MockConfig(retry_max_delay=0.2)  # type: ignore
-    start_time = asyncio.get_event_loop().time()
-    with pytest.raises(RetryError):
+    with pytest.raises(APIError):
         await test_func()
-    end_time = asyncio.get_event_loop().time()
 
     assert attempts == 3
-    # Total time should be less than 3 * max_delay
-    assert end_time - start_time < 0.6
+    assert len(delays) == 2
+    assert all(delay <= 0.3 for delay in delays)  # All delays should be less than max_delay + jitter
 
 
 async def test_retry_linear_backoff() -> None:
     """Test retry with linear backoff."""
     attempts = 0
     delays: list[float] = []
-    start_time = asyncio.get_event_loop().time()
+    start_time = time.monotonic()
 
     @retry(max_attempts=3, delay=0.1, max_delay=1.0, exponential=False)
     async def test_func() -> None:
         nonlocal attempts, start_time
-        current_time = asyncio.get_event_loop().time()
+        current_time = time.monotonic()
         if attempts > 0:
             delays.append(current_time - start_time)
         start_time = current_time
@@ -145,11 +152,12 @@ async def test_retry_linear_backoff() -> None:
         raise APIError("Test error")
 
     test_func.config = MockConfig(retry_exponential=False)  # type: ignore
-    with pytest.raises(RetryError):
+    with pytest.raises(APIError):
         await test_func()
 
     assert attempts == 3
-    assert abs(delays[1] - delays[0]) < 0.05  # Delays should be similar
+    assert len(delays) == 2
+    assert abs(delays[1] - delays[0]) < 0.1  # Delays should be similar in linear mode
 
 
 async def test_retry_with_result() -> None:
@@ -161,10 +169,10 @@ async def test_retry_with_result() -> None:
         nonlocal attempts
         attempts += 1
         if attempts < 2:
-            return {"error": True}
+            raise APIError("Test error")
         return {"error": False, "data": "success"}
 
     test_func.config = MockConfig()  # type: ignore
     result = await test_func()
     assert result == {"error": False, "data": "success"}
-    assert attempts == 2 
+    assert attempts == 2

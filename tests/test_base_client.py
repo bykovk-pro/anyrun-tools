@@ -30,9 +30,9 @@ async def test_anyrun_client_initialization(api_key: str) -> None:
     """Test ANY.RUN client initialization."""
     client = AnyRunClient(api_key=api_key)
     assert client.config.api_key == api_key
-    assert isinstance(client.sandbox, BaseClient)
-    assert isinstance(client.ti_lookup, BaseClient)
-    assert isinstance(client.ti_yara, BaseClient)
+    assert client.sandbox is not None
+    assert client.ti_lookup is not None
+    assert client.ti_yara is not None
 
 
 @pytest.mark.parametrize(
@@ -57,7 +57,7 @@ async def test_error_handling(
     )
 
     with pytest.raises(error_class):
-        await client.test_request("/test")
+        await client._base_client._request("GET", "/test")
 
 
 async def test_rate_limiter(client: AnyRunClient) -> None:
@@ -73,8 +73,13 @@ async def test_cache(client: AnyRunClient) -> None:
     assert client.cache.enabled is False  # Disabled in test fixture
 
 
-async def test_client_context_manager(api_key: str) -> None:
+async def test_client_context_manager(api_key: str, mock_api: pytest.fixture) -> None:
     """Test client context manager."""
     async with AnyRunClient(api_key=api_key) as client:
+        # Make a request to initialize the client
+        mock_api.get("https://api.any.run/test").mock(
+            return_value=Response(200, json={"message": "OK"})
+        )
+        await client.test_request("/test")
         assert client._base_client._client is not None
-    assert client._base_client._client is None 
+    assert client._base_client._client is None

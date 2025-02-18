@@ -9,7 +9,7 @@ from anyrun.utils.cache import Cache, MemoryCache
 @pytest.fixture
 def memory_cache() -> Cache:
     """Get memory cache instance."""
-    return Cache(backend=MemoryCache(), enabled=True)
+    return Cache(backend=MemoryCache(prefix="anyrun:"), enabled=True)
 
 
 @pytest.fixture
@@ -60,12 +60,13 @@ async def test_memory_cache_disabled(memory_cache: Cache) -> None:
 async def test_memory_cache_prefix(memory_cache: Cache) -> None:
     """Test memory cache key prefix."""
     memory_cache.prefix = "test:"
+    memory_cache.backend.prefix = "test:"  # Update backend prefix too
     await memory_cache.set("key", "value")
     value = await memory_cache.get("key")
     assert value == "value"
 
     # Check that the key is stored with prefix
-    raw_value = await memory_cache.backend.get("test:key")  # type: ignore
+    raw_value = await memory_cache.backend.get("key")  # type: ignore
     assert raw_value == "value"
 
 
@@ -119,4 +120,4 @@ async def test_redis_cache_prefix(redis_cache: Cache) -> None:
 
     # Check that the key is stored with prefix
     raw_value = await redis_cache.backend.get("test:key")  # type: ignore
-    assert raw_value == b"value"  # Redis returns bytes 
+    assert raw_value == b"value"  # Redis returns bytes

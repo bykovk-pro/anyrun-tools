@@ -31,6 +31,7 @@ async def client(api_key: str) -> AsyncGenerator[AnyRunClient, None]:
         api_key=api_key,
         sandbox_version="v1",
         cache_enabled=False,
+        timeout=1.0,  # Short timeout for tests
     ) as client:
         yield client
 
@@ -38,6 +39,9 @@ async def client(api_key: str) -> AsyncGenerator[AnyRunClient, None]:
 @pytest.fixture
 async def sandbox_client(api_key: str) -> AsyncGenerator[SandboxClientV1, None]:
     """Get test sandbox client instance."""
-    client = SandboxClientV1(api_key=api_key)
+    client = SandboxClientV1(
+        api_key=api_key,
+        timeout=1.0,  # Short timeout for tests
+    )
     yield client
-    await client.close() 
+    await client.close()

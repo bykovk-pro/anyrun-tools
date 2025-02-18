@@ -52,7 +52,7 @@ async def test_analyze_file(mock_api: pytest.fixture, sandbox_client: pytest.fix
     )
 
     assert response.error is False
-    assert response.data.taskid == task_id
+    assert response.data.task_id == task_id
 
 
 async def test_analyze_url(mock_api: pytest.fixture, sandbox_client: pytest.fixture) -> None:
@@ -77,7 +77,7 @@ async def test_analyze_url(mock_api: pytest.fixture, sandbox_client: pytest.fixt
     )
 
     assert response.error is False
-    assert response.data.taskid == task_id
+    assert response.data.task_id == task_id
 
 
 async def test_get_analysis(mock_api: pytest.fixture, sandbox_client: pytest.fixture) -> None:
@@ -106,7 +106,7 @@ async def test_get_analysis(mock_api: pytest.fixture, sandbox_client: pytest.fix
 
 async def test_list_analyses(mock_api: pytest.fixture, sandbox_client: pytest.fixture) -> None:
     """Test listing analyses."""
-    mock_api.get("https://api.any.run/v1/analysis/list").mock(
+    mock_api.get("https://api.any.run/v1/analysis").mock(
         return_value=Response(
             200,
             json={
@@ -114,7 +114,7 @@ async def test_list_analyses(mock_api: pytest.fixture, sandbox_client: pytest.fi
                 "data": {
                     "tasks": [
                         {
-                            "uuid": "test-uuid",
+                            "uuid": "12345678-1234-1234-1234-123456789abc",
                             "verdict": "No threats detected",
                             "date": "2024-02-18T00:00:00Z",
                             "tags": [],
@@ -134,12 +134,12 @@ async def test_list_analyses(mock_api: pytest.fixture, sandbox_client: pytest.fi
     response = await sandbox_client.list_analyses(limit=5)
     assert response.error is False
     assert len(response.data.tasks) == 1
-    assert response.data.tasks[0].uuid == "test-uuid"
+    assert response.data.tasks[0].uuid == "12345678-1234-1234-1234-123456789abc"
 
 
 async def test_get_environment(mock_api: pytest.fixture, sandbox_client: pytest.fixture) -> None:
     """Test getting environment information."""
-    mock_api.get("https://api.any.run/v1/environments").mock(
+    mock_api.get("https://api.any.run/v1/environment").mock(
         return_value=Response(
             200,
             json={
@@ -244,7 +244,7 @@ async def test_get_user_presets(mock_api: pytest.fixture, sandbox_client: pytest
 async def test_add_analysis_time(mock_api: pytest.fixture, sandbox_client: pytest.fixture) -> None:
     """Test adding time to analysis."""
     task_id = "test-task-id"
-    mock_api.patch(f"https://api.any.run/v1/analysis/{task_id}/time/add").mock(
+    mock_api.patch(f"https://api.any.run/v1/analysis/addtime/{task_id}").mock(
         return_value=Response(
             200,
             json={
@@ -262,7 +262,7 @@ async def test_add_analysis_time(mock_api: pytest.fixture, sandbox_client: pytes
 async def test_stop_analysis(mock_api: pytest.fixture, sandbox_client: pytest.fixture) -> None:
     """Test stopping analysis."""
     task_id = "test-task-id"
-    mock_api.patch(f"https://api.any.run/v1/analysis/{task_id}/stop").mock(
+    mock_api.patch(f"https://api.any.run/v1/analysis/stop/{task_id}").mock(
         return_value=Response(
             200,
             json={
@@ -280,7 +280,7 @@ async def test_stop_analysis(mock_api: pytest.fixture, sandbox_client: pytest.fi
 async def test_delete_analysis(mock_api: pytest.fixture, sandbox_client: pytest.fixture) -> None:
     """Test deleting analysis."""
     task_id = "test-task-id"
-    mock_api.delete(f"https://api.any.run/v1/analysis/{task_id}").mock(
+    mock_api.delete(f"https://api.any.run/v1/analysis/delete/{task_id}").mock(
         return_value=Response(
             200,
             json={
@@ -298,7 +298,7 @@ async def test_delete_analysis(mock_api: pytest.fixture, sandbox_client: pytest.
 async def test_get_analysis_monitor(mock_api: pytest.fixture, sandbox_client: pytest.fixture) -> None:
     """Test getting analysis monitor data."""
     task_id = "test-task-id"
-    mock_api.get(f"https://api.any.run/v1/analysis/{task_id}/monitor").mock(
+    mock_api.get(f"https://api.any.run/v1/analysis/monitor/{task_id}").mock(
         return_value=Response(
             200,
             json={
@@ -316,4 +316,4 @@ async def test_get_analysis_monitor(mock_api: pytest.fixture, sandbox_client: py
     response = await sandbox_client.get_analysis_monitor(task_id)
     assert response["task"]["uuid"] == task_id
     assert response["task"]["status"] == 50
-    assert response["completed"] is False 
+    assert response["completed"] is False

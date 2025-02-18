@@ -278,9 +278,27 @@ class NoCache(CacheBackend):
 class MemoryCache(CacheBackend):
     """In-memory cache backend implementation."""
 
-    def __init__(self) -> None:
-        """Initialize in-memory cache."""
+    def __init__(self, prefix: str = "anyrun:", default_ttl: int = 300) -> None:
+        """Initialize in-memory cache.
+
+        Args:
+            prefix: Key prefix
+            default_ttl: Default TTL in seconds
+        """
         self._cache: Dict[str, Tuple[Any, Optional[float]]] = {}
+        self.prefix = prefix
+        self.default_ttl = default_ttl
+
+    def _get_key(self, key: str) -> str:
+        """Get prefixed key.
+
+        Args:
+            key: Cache key
+
+        Returns:
+            str: Prefixed key
+        """
+        return f"{self.prefix}{key}"
 
     async def get(self, key: str) -> Optional[Any]:
         """Get value from memory cache.
@@ -291,6 +309,7 @@ class MemoryCache(CacheBackend):
         Returns:
             Any: Cached value or None if not found
         """
+        key = self._get_key(key)
         if key not in self._cache:
             return None
 
@@ -309,7 +328,8 @@ class MemoryCache(CacheBackend):
             value: Value to cache
             ttl: Time to live in seconds
         """
-        expiry = time.time() + ttl if ttl is not None else None
+        key = self._get_key(key)
+        expiry = time.time() + (ttl or self.default_ttl) if ttl is not None else None
         self._cache[key] = (value, expiry)
 
     async def delete(self, key: str) -> None:
@@ -318,6 +338,7 @@ class MemoryCache(CacheBackend):
         Args:
             key: Cache key
         """
+        key = self._get_key(key)
         self._cache.pop(key, None)
 
     async def exists(self, key: str) -> bool:
@@ -329,6 +350,7 @@ class MemoryCache(CacheBackend):
         Returns:
             bool: True if key exists and not expired, False otherwise
         """
+        key = self._get_key(key)
         if key not in self._cache:
             return False
 

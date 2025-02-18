@@ -265,4 +265,4 @@ def test_user_presets_response_validation() -> None:
     })
     assert len(response.data) == 1
     assert response.data[0].name == "Test Preset"
-    assert response.error is False 
+    assert response.error is False
