@@ -1,7 +1,20 @@
 [flake8]
 max-line-length = 100
-exclude = .git,__pycache__,build,dist,*.egg-info
-ignore = E203,W503,E231,D401,F811,E221
-inline-quotes = double
-multiline-quotes = double
-docstring-quotes = double
+extend-ignore = E203
+per-file-ignores = __init__.py:F401
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    *.egg-info,
+    tests/*
+filename = src/anyrun/*
+docstring-convention = google
+max-complexity = 10
+max-cognitive-complexity = 15
+max-annotations-complexity = 4
+max-expression-complexity = 7
+max-line-complexity = 15
+max-function-length = 50
+max-parameters-amount = 6

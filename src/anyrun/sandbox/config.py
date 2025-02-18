@@ -10,9 +10,7 @@ class SandboxConfig(BaseConfig):
     """Configuration for Sandbox API."""
 
     # API settings
-    api_version: APIVersion = Field(
-        default=APIVersion.V1, description="Sandbox API version"
-    )
+    api_version: APIVersion = Field(default=APIVersion.V1, description="Sandbox API version")
 
     # Analysis settings
     auto_download_files: bool = Field(

@@ -87,11 +87,7 @@ def retry(
                 RetryError: If all attempts fail
             """
             # Check if the first argument is a class instance with config attribute
-            if (
-                args
-                and hasattr(args[0], "config")
-                and hasattr(args[0].config, "retry_enabled")
-            ):
+            if args and hasattr(args[0], "config") and hasattr(args[0].config, "retry_enabled"):
                 if not args[0].config.retry_enabled:
                     return await func(*args, **kwargs)
 

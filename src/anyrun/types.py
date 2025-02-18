@@ -40,9 +40,7 @@ class APIKey(BaseModel):
     created_at: datetime = Field(description="Creation timestamp")
     expires_at: datetime | None = Field(None, description="Expiration timestamp")
     is_active: bool = Field(default=True, description="Key status")
-    permissions: dict[str, bool] = Field(
-        default_factory=dict, description="Key permissions"
-    )
+    permissions: dict[str, bool] = Field(default_factory=dict, description="Key permissions")
 
 
 class Pagination(BaseModel):
@@ -60,12 +58,8 @@ class WebhookConfig(BaseModel):
     secret: str | None = Field(None, description="Webhook secret")
     events: list[str] = Field(description="Event types to subscribe to")
     is_active: bool = Field(default=True, description="Webhook status")
-    retry_count: int = Field(
-        default=3, ge=0, le=10, description="Number of retry attempts"
-    )
-    timeout: int = Field(
-        default=30, ge=1, le=60, description="Request timeout in seconds"
-    )
+    retry_count: int = Field(default=3, ge=0, le=10, description="Number of retry attempts")
+    timeout: int = Field(default=30, ge=1, le=60, description="Request timeout in seconds")
 
 
 class CacheBackend(str, Enum):
@@ -111,15 +105,11 @@ class BaseConfig(BaseModel):
     verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
     proxies: dict[str, str] | None = Field(None, description="HTTP/HTTPS proxies")
     user_agent: str | None = Field(None, description="User agent string")
-    headers: dict[str, str] = Field(
-        default_factory=dict, description="Additional headers"
-    )
+    headers: dict[str, str] = Field(default_factory=dict, description="Additional headers")
 
     # Cache settings
     cache_enabled: bool = Field(default=True, description="Enable caching")
-    cache_backend: CacheBackend = Field(
-        default=CacheBackend.MEMORY, description="Cache backend"
-    )
+    cache_backend: CacheBackend = Field(default=CacheBackend.MEMORY, description="Cache backend")
     cache_ttl: int = Field(default=300, description="Cache TTL in seconds")
     cache_prefix: str = Field(default="anyrun:", description="Cache key prefix")
 
@@ -129,9 +119,7 @@ class BaseConfig(BaseModel):
         default=RateLimitBackend.MEMORY, description="Rate limit backend"
     )
     rate_limit: int = Field(default=10, description="Rate limit (requests per second)")
-    rate_limit_window: float = Field(
-        default=1.0, description="Rate limit window in seconds"
-    )
+    rate_limit_window: float = Field(default=1.0, description="Rate limit window in seconds")
 
     # Retry settings
     retry_enabled: bool = Field(default=True, description="Enable retries")
@@ -139,12 +127,8 @@ class BaseConfig(BaseModel):
         default=RetryStrategy.EXPONENTIAL, description="Retry strategy"
     )
     retry_max_attempts: int = Field(default=3, description="Maximum retry attempts")
-    retry_initial_delay: float = Field(
-        default=1.0, description="Initial retry delay in seconds"
-    )
-    retry_max_delay: float = Field(
-        default=60.0, description="Maximum retry delay in seconds"
-    )
+    retry_initial_delay: float = Field(default=1.0, description="Initial retry delay in seconds")
+    retry_max_delay: float = Field(default=60.0, description="Maximum retry delay in seconds")
     retry_backoff_factor: float = Field(default=2.0, description="Retry backoff factor")
 
     # Logging settings

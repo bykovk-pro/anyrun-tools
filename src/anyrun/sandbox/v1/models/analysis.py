@@ -2,18 +2,13 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Type, Union, Literal, Callable, Generator
-from typing_extensions import Annotated
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import (
-    BaseModel,
-    Field,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, Field, model_validator
 
-from .common import ThreatLevelText, HashesApiDto, PrivacyType
+from .common import HashesApiDto, PrivacyType, ThreatLevelText
 from .task_status_update import TaskStatusDto
+
 
 # Base models
 class ObjectType(str, Enum):
@@ -103,6 +98,7 @@ class StartFolder(str, Enum):
 
 class GeoLocation(str, Enum):
     """Geographic location for TOR and residential proxy."""
+
     FASTEST = "fastest"
     AU = "AU"  # Australia
     BR = "BR"  # Brazil
@@ -118,27 +114,28 @@ class GeoLocation(str, Enum):
 
 class TaskOptionsDto(BaseModel):
     """Task options model."""
+
     private: PrivacyType = Field(description="Privacy level")
     whitelist: List[str] = Field(default=[], description="Whitelisted items")
-    mitm: bool = Field(default=False, description="MITM status")
-    fakenet: bool = Field(default=False, description="FakeNet status")
+    mitm: bool = Field(description="MITM status")
+    fakenet: bool = Field(description="FakeNet status")
     openVPN: str = Field(description="OpenVPN configuration")
     torGeo: Optional[str] = Field(None, description="TOR geography")
-    netviator: bool = Field(default=False, description="Netviator status")
-    netConnected: bool = Field(default=False, description="Network connection status")
+    netviator: bool = Field(description="Netviator status")
+    netConnected: bool = Field(description="Network connection status")
     network: str = Field(description="Network type")
     logger: str = Field(description="Logger type")
-    presentation: bool = Field(default=False, description="Presentation mode")
-    teamwork: bool = Field(default=False, description="Team collaboration")
-    reboots: bool = Field(default=False, description="System reboots")
-    onlyimportant: bool = Field(default=False, description="Important events only")
-    video: bool = Field(default=False, description="Video recording")
+    presentation: bool = Field(description="Presentation mode")
+    teamwork: bool = Field(description="Team collaboration")
+    reboots: bool = Field(description="System reboots")
+    onlyimportant: bool = Field(description="Important events only")
+    video: bool = Field(description="Video recording")
     locale: str = Field(description="System locale")
     residentialProxyGeo: Optional[str] = Field(None, description="Residential proxy geography")
-    residentialProxy: bool = Field(default=False, description="Residential proxy status")
-    autoclickerDebugMode: bool = Field(default=False, description="Autoclicker debug mode")
-    autoclicker: bool = Field(default=False, description="Autoclicker status")
-    chatGPT: bool = Field(default=False, description="ChatGPT integration")
+    residentialProxy: bool = Field(description="Residential proxy status")
+    autoclickerDebugMode: bool = Field(description="Autoclicker debug mode")
+    autoclicker: bool = Field(description="Autoclicker status")
+    chatGPT: bool = Field(description="ChatGPT integration")
 
 
 class AnalysisRequest(BaseModel):
@@ -147,7 +144,9 @@ class AnalysisRequest(BaseModel):
     # Object parameters
     obj_type: ObjectType = Field(default=ObjectType.FILE, description="Type of new task")
     file: Optional[bytes] = Field(None, description="Required when obj_type=file")
-    obj_url: Optional[str] = Field(None, description="Required when obj_type=url or obj_type=download")
+    obj_url: Optional[str] = Field(
+        None, description="Required when obj_type=url or obj_type=download"
+    )
     task_rerun_uuid: Optional[str] = Field(None, description="Required when obj_type=rerun")
 
     # Environment parameters
@@ -158,9 +157,19 @@ class AnalysisRequest(BaseModel):
     env_locale: Optional[str] = Field(None, description="Operation system's language")
 
     # Object execution parameters
-    obj_ext_cmd: Optional[str] = Field(None, min_length=0, max_length=256, description="Optional command line (Windows only)")
+    obj_ext_cmd: Optional[str] = Field(
+        None,
+        min_length=0,
+        max_length=256,
+        description="Optional command line (Windows only)",
+    )
     obj_ext_browser: Optional[Browser] = Field(None, description="Browser type")
-    obj_ext_useragent: Optional[str] = Field(None, min_length=0, max_length=256, description="User agent for download type")
+    obj_ext_useragent: Optional[str] = Field(
+        None,
+        min_length=0,
+        max_length=256,
+        description="User agent for download type",
+    )
     obj_ext_elevateprompt: Optional[bool] = Field(None, description="Windows only")
     obj_force_elevation: Optional[bool] = Field(None, description="Windows only")
     auto_confirm_uac: Optional[bool] = Field(None, description="Windows only")
@@ -172,13 +181,21 @@ class AnalysisRequest(BaseModel):
     opt_network_connect: Optional[bool] = Field(None, description="Network connection state")
     opt_network_fakenet: Optional[bool] = Field(None, description="FakeNet feature status")
     opt_network_tor: Optional[bool] = Field(None, description="TOR using")
-    opt_network_geo: Optional[GeoLocation] = Field(None, description="Geographic location for TOR traffic")
+    opt_network_geo: Optional[GeoLocation] = Field(
+        None, description="Geographic location for TOR traffic"
+    )
     opt_network_mitm: Optional[bool] = Field(None, description="HTTPS MITM proxy option")
-    opt_network_residential_proxy: Optional[bool] = Field(None, description="Residential proxy for network traffic")
-    opt_network_residential_proxy_geo: Optional[GeoLocation] = Field(None, description="Geographic location for residential proxy")
+    opt_network_residential_proxy: Optional[bool] = Field(
+        None, description="Residential proxy for network traffic"
+    )
+    opt_network_residential_proxy_geo: Optional[GeoLocation] = Field(
+        None, description="Geographic location for residential proxy"
+    )
 
     # Timeout options
-    opt_timeout: Optional[int] = Field(None, ge=10, le=1200, description="Execution time in seconds (10-1200)")
+    opt_timeout: Optional[int] = Field(
+        None, ge=10, le=1200, description="Execution time in seconds (10-1200)"
+    )
 
     # Privacy options
     opt_privacy_type: Optional[PrivacyType] = Field(None, description="Privacy settings")
@@ -186,12 +203,20 @@ class AnalysisRequest(BaseModel):
 
     # Advanced options
     opt_chatgpt: Optional[bool] = Field(None, description="ChatGPT option")
-    opt_automated_interactivity: Optional[bool] = Field(None, description="Automated Interactivity (ML) option")
+    opt_automated_interactivity: Optional[bool] = Field(
+        None, description="Automated Interactivity (ML) option"
+    )
 
     # Tags
-    user_tags: Optional[str] = Field(None, description="Pattern: a-z, A-Z, 0-9, hyphen (-), comma (,). Max length per tag: 16 chars, max tags: 8")
+    user_tags: Optional[str] = Field(
+        None,
+        description=(
+            "Pattern: a-z, A-Z, 0-9, hyphen (-), comma (,). "
+            "Max length per tag: 16 chars, max tags: 8"
+        ),
+    )
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def validate_required_fields(self) -> "AnalysisRequest":
         """Validate required fields based on obj_type."""
         if self.obj_type == ObjectType.FILE and not self.file:
@@ -205,6 +230,7 @@ class AnalysisRequest(BaseModel):
 
 class TaskUrlsDto(BaseModel):
     """Task URLs."""
+
     related: Optional[str] = Field(None, description="URL of the main analysis report")
     json_url: Optional[str] = Field(None, description="URL of the JSON report")
     misp: Optional[str] = Field(None, description="URL of the MISP report")
@@ -214,7 +240,11 @@ class TaskUrlsDto(BaseModel):
 
 class BaseTaskHistoryDto(BaseModel):
     """Base class for task history items."""
-    uuid: str = Field(pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", description="Task UUID")
+
+    uuid: str = Field(
+        pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        description="Task UUID",
+    )
     verdict: ThreatLevelText = Field(description="Analysis verdict")
     date: datetime = Field(description="Analysis creation timestamp")
     tags: List[str] = Field(default=[], description="Analysis tags")
@@ -229,11 +259,13 @@ class BaseTaskHistoryDto(BaseModel):
 
 class AnalysisListItem(BaseTaskHistoryDto):
     """Analysis list item model."""
+
     pass
 
 
 class TaskHistoryDto(BaseTaskHistoryDto):
     """Task history item."""
+
     related: str = Field(description="URL of the main analysis report")
     json_url: str = Field(description="URL of the JSON report")
     misp: str = Field(description="URL of the MISP report")
@@ -244,21 +276,21 @@ class TaskHistoryDto(BaseTaskHistoryDto):
 class AnalysisListRequest(BaseModel):
     """Analysis list request parameters."""
 
-    team: bool = Field(
-        default=False, description="Get team history instead of personal"
-    )
+    team: bool = Field(default=False, description="Get team history instead of personal")
     skip: int = Field(default=0, ge=0, description="Number of items to skip")
     limit: int = Field(default=25, ge=1, le=100, description="Number of items per page")
 
 
 class TaskEnvironmentDto(BaseModel):
     """Task environment model."""
+
     OS: Dict[str, Any] = Field(description="Operating system information")
     software: List[Dict[str, Any]] = Field(default=[], description="Installed software")
 
 
 class TaskObjectDto(BaseModel):
     """Task object model."""
+
     names: Dict[str, str] = Field(description="Object names")
     hashes: HashesApiDto = Field(description="Object hashes")
     urls: Optional[Dict[str, str]] = Field(None, description="Object URLs")
@@ -266,7 +298,10 @@ class TaskObjectDto(BaseModel):
 
 class TaskPublicDto(BaseModel):
     """Task public information model."""
-    maxAddedTimeReached: bool = Field(default=False, description="Maximum allowed task runtime reached")
+
+    maxAddedTimeReached: bool = Field(
+        default=False, description="Maximum allowed task runtime reached"
+    )
     objects: TaskObjectDto = Field(description="Task objects information")
     options: TaskOptionsDto = Field(description="Task options")
     environment: TaskEnvironmentDto = Field(description="Task environment information")
@@ -274,6 +309,7 @@ class TaskPublicDto(BaseModel):
 
 class TaskTimesDto(BaseModel):
     """Task timing information."""
+
     created: datetime = Field(description="Task creation time")
     started: Optional[datetime] = Field(None, description="Task start time")
     completed: Optional[datetime] = Field(None, description="Task completion time")
@@ -282,6 +318,7 @@ class TaskTimesDto(BaseModel):
 
 class TaskActionsDto(BaseModel):
     """Task actions model."""
+
     addTime: bool = Field(default=False, description="Can add time")
     stop: bool = Field(default=False, description="Can stop task")
     delete: bool = Field(default=False, description="Can delete task")
@@ -289,6 +326,7 @@ class TaskActionsDto(BaseModel):
 
 class TaskStatusUpdateDto(BaseModel):
     """Task status update model."""
+
     task: TaskStatusDto = Field(description="Task status information")
     completed: bool = Field(default=False, description="Task completion status")
     error: Literal[False] = Field(default=False, description="Error status")
@@ -296,6 +334,7 @@ class TaskStatusUpdateDto(BaseModel):
 
 class AnalysisData(BaseModel):
     """Analysis data model."""
+
     taskid: Optional[str] = Field(None, description="Task ID (used in create response)")
     task_id: Optional[str] = Field(None, description="Task ID (used in status response)")
     status: Optional[str] = Field(None, description="Task status")
@@ -303,7 +342,7 @@ class AnalysisData(BaseModel):
     verdict: Optional[Dict[str, Any]] = Field(None, description="Analysis verdict")
     task: Optional[TaskStatusDto] = Field(None, description="Task status information")
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def convert_taskid(self) -> "AnalysisData":
         """Convert taskid to task_id if needed."""
         if self.taskid and not self.task_id:
@@ -314,11 +353,12 @@ class AnalysisData(BaseModel):
 
 class AnalysisResponse(BaseModel):
     """Analysis response."""
+
     error: bool = Field(description="Error flag")
     data: AnalysisData = Field(description="Response data")
     message: Optional[str] = Field(None, description="Error message")
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def validate_data(self) -> "AnalysisResponse":
         """Validate response data."""
         if not self.error and self.data.taskid:
@@ -329,11 +369,13 @@ class AnalysisResponse(BaseModel):
 
 class AnalysisListData(BaseModel):
     """Analysis list data model."""
+
     tasks: List[AnalysisListItem] = Field(description="List of analysis items")
 
 
 class AnalysisListResponse(BaseModel):
     """Analysis list response."""
+
     error: bool = Field(description="Error flag")
     data: AnalysisListData = Field(description="Response data")
     message: Optional[str] = Field(None, description="Error message")
@@ -382,7 +424,9 @@ class AnalysisResult(BaseModel):
     creation: int = Field(description="Timestamp of the analysis creation")
     creationText: str = Field(description="Human-readable timestamp of the analysis creation")
     stopExec: Optional[int] = Field(None, description="Timestamp of the analysis completion")
-    stopExecText: Optional[str] = Field(None, description="Human-readable timestamp of the analysis completion")
+    stopExecText: Optional[str] = Field(
+        None, description="Human-readable timestamp of the analysis completion"
+    )
 
     # Reports
     reports: Dict[str, str] = Field(description="URLs of various report formats")
@@ -467,69 +511,100 @@ class AnalysisResult(BaseModel):
 
 class FileAnalysisRequest(AnalysisRequest):
     """File analysis request parameters."""
-    obj_type: Literal[ObjectType.FILE] = Field(default=ObjectType.FILE, frozen=True, description="Type of new task")
+
+    obj_type: Literal[ObjectType.FILE] = Field(
+        default=ObjectType.FILE, frozen=True, description="Type of new task"
+    )
     file: bytes = Field(description="File content")
 
 
 class URLAnalysisRequest(AnalysisRequest):
     """URL analysis request parameters."""
-    obj_type: Literal[ObjectType.URL] = Field(default=ObjectType.URL, frozen=True, description="Type of new task")
+
+    obj_type: Literal[ObjectType.URL] = Field(
+        default=ObjectType.URL, frozen=True, description="Type of new task"
+    )
     obj_url: str = Field(description="Target URL")
 
 
 class DownloadAnalysisRequest(AnalysisRequest):
     """Download analysis request parameters."""
-    obj_type: Literal[ObjectType.DOWNLOAD] = Field(default=ObjectType.DOWNLOAD, frozen=True, description="Type of new task")
+
+    obj_type: Literal[ObjectType.DOWNLOAD] = Field(
+        default=ObjectType.DOWNLOAD, frozen=True, description="Type of new task"
+    )
     obj_url: str = Field(description="URL to download and analyze")
 
 
 class RerunAnalysisRequest(AnalysisRequest):
     """Rerun analysis request parameters."""
-    obj_type: Literal[ObjectType.RERUN] = Field(default=ObjectType.RERUN, frozen=True, description="Type of new task")
+
+    obj_type: Literal[ObjectType.RERUN] = Field(
+        default=ObjectType.RERUN, frozen=True, description="Type of new task"
+    )
     task_rerun_uuid: str = Field(description="Task UUID to rerun")
 
 
 # Base response models
 class BaseResponseDto(BaseModel):
     """Base response model."""
+
     error: Literal[False] = Field(False, description="False indicates a successful request")
+
 
 class ErrorResponseDto(BaseModel):
     """Error response model."""
+
     error: Literal[True] = Field(True, description="True indicates a failed request")
     message: str = Field(description="Provides information about the error")
 
+
 class SuccessMessageDto(BaseResponseDto):
     """Success response with message."""
-    message: Literal["Add time in task successful", "Stop task successful", "Delete task successful"] = Field(
-        description="Contains response message"
-    )
+
+    message: Literal[
+        "Add time in task successful",
+        "Stop task successful",
+        "Delete task successful",
+    ] = Field(description="Contains response message")
+
 
 # Success response models
 class TaskIdResponse(BaseModel):
     """Response containing task ID."""
+
     taskid: str = Field(pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+
 
 class TaskHistoryResponse(BaseModel):
     """Response containing task history."""
+
     tasks: List[Dict[str, Any]]
+
 
 class UserLimitsResponse(BaseModel):
     """Response containing user limits."""
+
     limits: Dict[str, Any]
+
 
 class EnvironmentsResponse(BaseModel):
     """Response containing available environments."""
+
     environments: List[Dict[str, Any]]
+
 
 class UserLimitsDto(BaseModel):
     """User account limits."""
+
     web: Dict[str, int] = Field(description="Defines limits for interactive usage")
     api: Dict[str, int] = Field(description="Defines limits for API usage")
     parallels: Dict[str, int] = Field(description="Defines limits for parallel runs")
 
+
 class EnvironmentDto(BaseModel):
     """Environment information."""
+
     os: OSType
     version: Union[WindowsVersion, LinuxVersion]
     bitness: BitnessType
@@ -538,53 +613,66 @@ class EnvironmentDto(BaseModel):
     type: EnvType
     software: Dict[str, Any]
 
+
 class SuccessResponseData(BaseModel):
     """Success response data model.
-    
+
     According to API schema, exactly one of these fields must be present:
     - taskid: for task creation response
     - tasks: for task history response
     - limits: for user limits response
     - environments: for environment info response
     """
-    taskid: Optional[str] = Field(None, pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+
+    taskid: Optional[str] = Field(
+        None, pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    )
     tasks: Optional[List[TaskHistoryDto]] = None
     limits: Optional[UserLimitsDto] = None
     environments: Optional[List[EnvironmentDto]] = None
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def validate_exactly_one_field(self) -> "SuccessResponseData":
         """Validate that exactly one field is present."""
         fields = {
             "taskid": self.taskid is not None,
             "tasks": self.tasks is not None,
             "limits": self.limits is not None,
-            "environments": self.environments is not None
+            "environments": self.environments is not None,
         }
         present_fields = [field for field, present in fields.items() if present]
         if len(present_fields) != 1:
             raise ValueError(
-                f"Exactly one field must be present, got {len(present_fields)}: {', '.join(present_fields)}"
+                "Exactly one field must be present, "
+                f"got {len(present_fields)}: {', '.join(present_fields)}"
             )
         return self
 
+
 class SuccessResponseDto(BaseResponseDto):
     """Success response model."""
+
     data: SuccessResponseData = Field(description="Contains response data")
+
 
 # Detailed data models
 class TaskStatusMainObjectDto(BaseModel):
     """Main object information."""
+
     names: Dict[str, Any] = Field(description="Object names information")
     hashes: HashesApiDto = Field(description="Object hashes")
 
+
 class TaskStatusVerdictDto(BaseModel):
     """Task verdict information."""
+
     threat_level: float = Field(description="Threat level of the analysis")
     text: ThreatLevelText = Field(description="Textual description of threat level")
 
+
 class TaskStatusSpecsDto(BaseModel):
     """Task specifications."""
+
     autostart: bool = Field(description="Indicates if threat uses autostart feature")
     bad_module_certificate: bool = Field(description="Bad module certificate status")
     bad_process_certificate: bool = Field(description="Bad process certificate status")
@@ -614,15 +702,19 @@ class TaskStatusSpecsDto(BaseModel):
     tor: bool = Field(description="TOR usage detected")
     uac_request: bool = Field(description="UAC request detected")
 
+
 # Report models
 class ReportVerdictDto(BaseModel):
     """Report verdict information."""
+
     score: float = Field(description="Numeric score of the analysis")
     threatLevel: float = Field(description="Threat level of the analysis")
     threatLevelText: ThreatLevelText = Field(description="Textual description of threat level")
 
+
 class ReportSpecsDto(BaseModel):
     """Report specifications."""
+
     autoStart: bool = Field(default=False, description="Auto start flag")
     cpuOverrun: bool = Field(default=False, description="CPU overrun flag")
     crashedApps: bool = Field(default=False, description="Crashed apps flag")
@@ -650,6 +742,7 @@ class ReportSpecsDto(BaseModel):
 
     class Config:
         """Model configuration."""
+
         json_schema_extra = {
             "example": {
                 "autoStart": False,
@@ -675,17 +768,19 @@ class ReportSpecsDto(BaseModel):
                 "staticDetections": False,
                 "stealing": False,
                 "suspStruct": False,
-                "torUsed": False
+                "torUsed": False,
             }
         }
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def validate_fields(self) -> "ReportSpecsDto":
         """Validate that all fields are properly set."""
         return self
 
+
 class ReportMainObjectDto(BaseModel):
     """Main object information in report."""
+
     type: ObjectType = Field(description="Type of the main object")
     permanentUrl: str = Field(description="URL for downloading the main object")
     filename: Optional[str] = Field(None, description="Name of the main object file")
@@ -694,22 +789,28 @@ class ReportMainObjectDto(BaseModel):
     hashes: HashesApiDto = Field(description="Object hashes")
     info: Optional[Dict[str, Any]] = Field(None, description="Additional object information")
 
+
 class ReportEnvironmentDto(BaseModel):
     """Environment information in report."""
+
     os: Dict[str, Any] = Field(description="Operating system information")
     software: List[Dict[str, Any]] = Field(description="Installed software information")
     hotfixes: Optional[List[str]] = Field(None, description="Installed hotfixes")
 
+
 class ReportCountersDto(BaseModel):
     """Counters information in report."""
+
     processes: Dict[str, int] = Field(description="Process statistics")
     network: Dict[str, int] = Field(description="Network statistics")
     files: Dict[str, int] = Field(description="File statistics")
     registry: Dict[str, int] = Field(description="Registry statistics")
     synchronization: Dict[str, Any] = Field(description="Synchronization statistics")
 
+
 class TaskReportDto(BaseModel):
     """Complete task report."""
+
     analysis: Dict[str, Any] = Field(description="Analysis information")
     environments: ReportEnvironmentDto = Field(description="Environment information")
     counters: ReportCountersDto = Field(description="Statistics counters")

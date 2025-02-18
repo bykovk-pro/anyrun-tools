@@ -1,21 +1,23 @@
 """Task status update models for Sandbox API v1."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from .common import ThreatLevelText, HashesApiDto, PrivacyType
+from .common import HashesApiDto, PrivacyType
 
 
 class TaskScoresDto(BaseModel):
     """Task scores model."""
+
     specs: Dict[str, bool] = Field(description="Task specifications")
     verdict: Dict[str, Any] = Field(description="Task verdict")
 
 
 class TaskObjectDto(BaseModel):
     """Task object model."""
+
     names: Optional[Dict[str, str]] = Field(None, description="Object names")
     hashes: Optional[HashesApiDto] = Field(None, description="Object hashes")
     urls: Optional[Dict[str, str]] = Field(None, description="Object URLs")
@@ -23,6 +25,7 @@ class TaskObjectDto(BaseModel):
 
 class TaskOptionsDto(BaseModel):
     """Task options model."""
+
     private: PrivacyType = Field(description="Privacy level")
     whitelist: List[str] = Field(default=[], description="Whitelisted items")
     mitm: bool = Field(description="MITM status")
@@ -48,12 +51,14 @@ class TaskOptionsDto(BaseModel):
 
 class TaskEnvironmentDto(BaseModel):
     """Task environment model."""
+
     OS: Dict[str, Any] = Field(description="Operating system information")
     software: List[Dict[str, Any]] = Field(default=[], description="Installed software")
 
 
 class TaskPublicDto(BaseModel):
     """Task public information model."""
+
     maxAddedTimeReached: bool = Field(description="Maximum allowed task runtime reached")
     objects: TaskObjectDto = Field(description="Task objects information")
     options: TaskOptionsDto = Field(description="Task options")
@@ -62,6 +67,7 @@ class TaskPublicDto(BaseModel):
 
 class TaskTimesDto(BaseModel):
     """Task timing information."""
+
     created: Optional[datetime] = Field(None, description="Task creation time")
     started: Optional[datetime] = Field(None, description="Task start time")
     completed: Optional[datetime] = Field(None, description="Task completion time")
@@ -70,6 +76,7 @@ class TaskTimesDto(BaseModel):
 
 class TaskActionsDto(BaseModel):
     """Task actions model."""
+
     addTime: Optional[bool] = Field(None, description="Can add time")
     stop: Optional[bool] = Field(None, description="Can stop task")
     delete: Optional[bool] = Field(None, description="Can delete task")
@@ -77,8 +84,12 @@ class TaskActionsDto(BaseModel):
 
 class TaskStatusDto(BaseModel):
     """Task status model."""
+
     id: Optional[str] = Field(None, alias="_id", description="Internal task ID")
-    uuid: str = Field(pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", description="Task UUID")
+    uuid: str = Field(
+        pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        description="Task UUID",
+    )
     status: int = Field(ge=0, le=100, description="Task completion rate (%)")
     remaining: int = Field(ge=0, description="Number of seconds until task completion")
     times: TaskTimesDto = Field(description="Task timing information")
@@ -92,6 +103,7 @@ class TaskStatusDto(BaseModel):
 
 class TaskStatusUpdateDto(BaseModel):
     """Task status update model."""
+
     task: TaskStatusDto = Field(description="Task status information")
     completed: bool = Field(description="Task completion status")
     error: Literal[False] = Field(False, description="Error status")

@@ -1,6 +1,6 @@
 """Base client for ANY.RUN APIs."""
 
-from typing import Any, Dict, Optional, Union, cast, Type
+from typing import Any, Dict, Optional, Union, cast
 
 import httpx
 from loguru import logger
@@ -15,15 +15,8 @@ from .constants import (
     HEADER_API_KEY,
     HEADER_USER_AGENT,
 )
-from .exceptions import (
-    APIError,
-    AuthenticationError,
-    NotFoundError,
-    RateLimitError,
-    ServerError,
-)
+from .exceptions import APIError, AuthenticationError, NotFoundError, RateLimitError, ServerError
 from .sandbox import create_sandbox_client
-from .sandbox.base import BaseSandboxClient
 from .ti_lookup import TILookupClient
 from .ti_yara import TIYaraClient
 from .types import CacheBackend, RetryStrategy
@@ -35,9 +28,7 @@ from .utils.cache import MemoryCache
 class BaseClient:
     """Base client for ANY.RUN APIs."""
 
-    def __init__(
-        self, config: BaseConfig, client: Optional[httpx.AsyncClient] = None
-    ) -> None:
+    def __init__(self, config: BaseConfig, client: Optional[httpx.AsyncClient] = None) -> None:
         """Initialize base client.
 
         Args:

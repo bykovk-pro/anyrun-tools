@@ -1,57 +1,54 @@
-"""Base class for sandbox API clients."""
+"""Base sandbox client."""
 
 import json
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, TypeVar, Union, Generic
+from typing import Any, Dict, Generic, Optional, TypeVar
 
 import httpx
-from loguru import logger
-from pydantic import HttpUrl, BaseModel
+from pydantic import HttpUrl
 
-from ..exceptions import (
-    APIError,
-    AuthenticationError,
-    NotFoundError,
-    RateLimitError,
-    ServerError,
-)
+from ..config import BaseConfig
+from ..constants import API_BASE_URL, DEFAULT_TIMEOUT, DEFAULT_USER_AGENT
+from ..exceptions import APIError, AuthenticationError, NotFoundError, RateLimitError, ServerError
 
-TAnalysisResponse = TypeVar("TAnalysisResponse", bound=BaseModel)
-TAnalysisListResponse = TypeVar("TAnalysisListResponse", bound=BaseModel)
-TEnvironmentResponse = TypeVar("TEnvironmentResponse", bound=BaseModel)
+A = TypeVar("A")  # Analysis response type
+L = TypeVar("L")  # List response type
+E = TypeVar("E")  # Environment response type
 
 
-class BaseSandboxClient(Generic[TAnalysisResponse, TAnalysisListResponse, TEnvironmentResponse], ABC):
+class BaseSandboxClient(Generic[A, L, E], ABC):
     """Base class for sandbox API clients."""
 
     def __init__(
         self,
         api_key: str,
         base_url: Optional[HttpUrl] = None,
-        timeout: int = 30,
+        timeout: Optional[int] = None,
         verify_ssl: bool = True,
         proxies: Optional[Dict[str, str]] = None,
         user_agent: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
     ) -> None:
-        """Initialize base sandbox client.
+        """Initialize sandbox client.
 
         Args:
             api_key: ANY.RUN API key
             base_url: Base URL for API requests
             timeout: Request timeout in seconds
             verify_ssl: Verify SSL certificates
-            proxies: Proxy configuration
+            proxies: HTTP/HTTPS proxies
             user_agent: User agent string
             headers: Additional headers
         """
-        self.api_key = api_key
-        self.base_url = str(base_url or "https://api.any.run").rstrip("/")
-        self.timeout = timeout
-        self.verify_ssl = verify_ssl
-        self.proxies = proxies
-        self.user_agent = user_agent
-        self.headers = headers or {}
+        self.config = BaseConfig(
+            api_key=api_key,
+            base_url=base_url or HttpUrl(API_BASE_URL),
+            timeout=timeout or DEFAULT_TIMEOUT,
+            verify_ssl=verify_ssl,
+            proxies=proxies or {},
+            user_agent=user_agent or DEFAULT_USER_AGENT,
+            headers=headers or {},
+        )
         self._client: Optional[httpx.AsyncClient] = None
 
     async def _ensure_client(self) -> httpx.AsyncClient:
@@ -62,11 +59,11 @@ class BaseSandboxClient(Generic[TAnalysisResponse, TAnalysisListResponse, TEnvir
         """
         if self._client is None:
             self._client = httpx.AsyncClient(
-                base_url=self.base_url,
-                timeout=self.timeout,
+                base_url=self.config.base_url,
+                timeout=self.config.timeout,
                 follow_redirects=True,
-                verify=self.verify_ssl,
-                headers=self.headers,
+                verify=self.config.verify_ssl,
+                headers=self.config.headers,
             )
         return self._client
 
@@ -76,7 +73,7 @@ class BaseSandboxClient(Generic[TAnalysisResponse, TAnalysisListResponse, TEnvir
         Returns:
             Dict[str, str]: Headers dictionary
         """
-        return {"Authorization": f"API-Key {self.api_key}"}
+        return {"Authorization": f"API-Key {self.config.api_key}"}
 
     async def _handle_response(self, response: httpx.Response) -> Dict[str, Any]:
         """Handle API response.
@@ -120,61 +117,73 @@ class BaseSandboxClient(Generic[TAnalysisResponse, TAnalysisListResponse, TEnvir
             await self._client.aclose()
             self._client = None
 
-    async def __aenter__(self) -> "BaseSandboxClient":
+    async def __aenter__(self) -> "BaseSandboxClient[A, L, E]":
         """Enter async context."""
         return self
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    async def __aexit__(self, *args: Any) -> None:
         """Exit async context."""
         await self.close()
 
     @abstractmethod
-    async def analyze_file(
-        self, file: Union[str, bytes], **kwargs: Any
-    ) -> TAnalysisResponse:
+    async def analyze_file(self, file: bytes, **kwargs: Any) -> A:
         """Submit file for analysis.
 
         Args:
-            file: File content as string or bytes
+            file: File content
             **kwargs: Additional analysis parameters
 
         Returns:
-            TAnalysisResponse: Analysis response
+            A: Analysis response
 
         Raises:
-            NotImplementedError: If not implemented in subclass
+            ValidationError: If parameters are invalid
+            APIError: If API request failed
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
-    async def get_analysis(self, task_id: str) -> TAnalysisResponse:
+    async def get_analysis(self, task_id: str) -> A:
         """Get analysis information.
 
         Args:
             task_id: Analysis task ID
 
         Returns:
-            TAnalysisResponse: Analysis information
+            A: Analysis information
 
         Raises:
-            NotImplementedError: If not implemented in subclass
+            APIError: If API request failed
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
-    async def list_analyses(self, **kwargs: Any) -> TAnalysisListResponse:
+    async def list_analyses(self, **kwargs: Any) -> L:
         """Get list of analyses.
 
         Args:
             **kwargs: List parameters
 
         Returns:
-            TAnalysisListResponse: List of analyses
+            L: List of analyses
 
         Raises:
-            NotImplementedError: If not implemented in subclass
+            ValidationError: If parameters are invalid
+            APIError: If API request failed
         """
-        raise NotImplementedError
+        pass
+
+    @abstractmethod
+    async def get_environment(self) -> E:
+        """Get available environment information.
+
+        Returns:
+            E: Environment information
+
+        Raises:
+            APIError: If API request failed
+        """
+        pass
 
     @abstractmethod
     async def get_analysis_monitor(self, task_id: str) -> Dict[str, Any]:
@@ -185,18 +194,6 @@ class BaseSandboxClient(Generic[TAnalysisResponse, TAnalysisListResponse, TEnvir
 
         Returns:
             Dict[str, Any]: Monitor data
-
-        Raises:
-            NotImplementedError: If not implemented in subclass
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_environment(self) -> TEnvironmentResponse:
-        """Get available environment information.
-
-        Returns:
-            TEnvironmentResponse: Environment information
 
         Raises:
             NotImplementedError: If not implemented in subclass

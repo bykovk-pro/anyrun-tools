@@ -25,9 +25,7 @@ def validate_api_key(api_key: str) -> None:
 
     # API key format: 32 hex characters
     if not re.match(r"^[a-f0-9]{32}$", api_key.lower()):
-        raise ValidationError(
-            "Invalid API key format. Expected 32 hexadecimal characters."
-        )
+        raise ValidationError("Invalid API key format. Expected 32 hexadecimal characters.")
 
 
 def validate_file_size(
@@ -54,8 +52,7 @@ def validate_file_size(
 
         if size > max_size:
             raise ValidationError(
-                f"File size ({size} bytes) exceeds maximum allowed size "
-                f"({max_size} bytes)"
+                f"File size ({size} bytes) exceeds maximum allowed size " f"({max_size} bytes)"
             )
 
         if size == 0:

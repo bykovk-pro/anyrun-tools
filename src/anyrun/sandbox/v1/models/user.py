@@ -1,21 +1,28 @@
 """User models for Sandbox API v1."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from .request_types import RequestOSType, RequestNetworkType, RequestGeoLocation, RequestPrivacyType
-from .response_types import ResponseOSType, ResponseNetworkType, ResponseGeoLocation, ResponsePrivacyType
+from .request_types import RequestGeoLocation, RequestNetworkType, RequestOSType, RequestPrivacyType
+from .response_types import (
+    ResponseGeoLocation,
+    ResponseNetworkType,
+    ResponseOSType,
+    ResponsePrivacyType,
+)
 
 
 class UserInfoRequest(BaseModel):
     """User info request parameters."""
+
     team: bool = Field(default=False, description="Get team info instead of personal")
 
 
 class UserLimitsDto(BaseModel):
     """User account limits."""
+
     web: Dict[str, int] = Field(description="Defines limits for interactive usage")
     api: Dict[str, int] = Field(description="Defines limits for API usage")
     parallels: Dict[str, int] = Field(description="Defines limits for parallel runs")
@@ -23,17 +30,20 @@ class UserLimitsDto(BaseModel):
 
 class UserInfoData(BaseModel):
     """User info data model."""
+
     limits: UserLimitsDto = Field(description="User account limits")
 
 
 class UserInfoResponse(BaseModel):
     """User info response."""
+
     error: Literal[False] = Field(False, description="Error flag")
     data: UserInfoData = Field(description="Response data")
 
 
 class UserPresetRequest(BaseModel):
     """User preset request model."""
+
     name: str = Field(min_length=1, max_length=64, description="Preset name")
 
     # Environment settings
@@ -41,9 +51,15 @@ class UserPresetRequest(BaseModel):
     version: str = Field(pattern="^(7|10|11|22\\.04\\.2)$", description="OS version")
     bitness: int = Field(ge=32, le=64, description="OS bitness")
     type: str = Field(pattern="^(clean|office|complete)$", description="Environment type")
-    browser: str = Field(pattern="^(Google Chrome|Mozilla Firefox|Internet Explorer|Microsoft Edge)$", description="Browser")
+    browser: str = Field(
+        pattern="^(Google Chrome|Mozilla Firefox|Internet Explorer|Microsoft Edge)$",
+        description="Browser",
+    )
     locale: str = Field(description="Locale")
-    location: str = Field(pattern="^(desktop|downloads|home|temp|appdata|root|windows)$", description="Start location")
+    location: str = Field(
+        pattern="^(desktop|downloads|home|temp|appdata|root|windows)$",
+        description="Start location",
+    )
 
     # Network settings
     net_connected: bool = Field(alias="netConnected", description="Network connected")
@@ -54,8 +70,12 @@ class UserPresetRequest(BaseModel):
     vpn: bool = Field(description="VPN enabled")
     open_vpn: str = Field(alias="openVPN", description="OpenVPN configuration")
     tor_geo: RequestGeoLocation = Field(alias="torGeo", description="TOR geography")
-    residential_proxy: bool = Field(alias="residentialProxy", description="Residential proxy enabled")
-    residential_proxy_geo: RequestGeoLocation = Field(alias="residentialProxyGeo", description="Residential proxy geography")
+    residential_proxy: bool = Field(
+        alias="residentialProxy", description="Residential proxy enabled"
+    )
+    residential_proxy_geo: RequestGeoLocation = Field(
+        alias="residentialProxyGeo", description="Residential proxy geography"
+    )
 
     # Additional settings
     timeout: int = Field(ge=10, le=1200, description="Timeout in seconds")
@@ -69,6 +89,7 @@ class UserPresetRequest(BaseModel):
 
 class UserPresetResponse(BaseModel):
     """User preset response model."""
+
     id: str = Field(alias="_id", description="Preset ID")
     name: str = Field(min_length=1, max_length=64, description="Preset name")
     user_id: str = Field(alias="userId", description="User ID")
@@ -80,9 +101,15 @@ class UserPresetResponse(BaseModel):
     version: str = Field(pattern="^(7|10|11|22\\.04\\.2)$", description="OS version")
     bitness: int = Field(ge=32, le=64, description="OS bitness")
     type: str = Field(pattern="^(clean|office|complete)$", description="Environment type")
-    browser: str = Field(pattern="^(Google Chrome|Mozilla Firefox|Internet Explorer|Microsoft Edge)$", description="Browser")
+    browser: str = Field(
+        pattern="^(Google Chrome|Mozilla Firefox|Internet Explorer|Microsoft Edge)$",
+        description="Browser",
+    )
     locale: str = Field(description="Locale")
-    location: str = Field(pattern="^(desktop|downloads|home|temp|appdata|root|windows)$", description="Start location")
+    location: str = Field(
+        pattern="^(desktop|downloads|home|temp|appdata|root|windows)$",
+        description="Start location",
+    )
 
     # Network settings
     net_connected: bool = Field(alias="netConnected", description="Network connected")
@@ -93,8 +120,12 @@ class UserPresetResponse(BaseModel):
     vpn: bool = Field(description="VPN enabled")
     open_vpn: str = Field(alias="openVPN", description="OpenVPN configuration")
     tor_geo: ResponseGeoLocation = Field(alias="torGeo", description="TOR geography")
-    residential_proxy: bool = Field(alias="residentialProxy", description="Residential proxy enabled")
-    residential_proxy_geo: ResponseGeoLocation = Field(alias="residentialProxyGeo", description="Residential proxy geography")
+    residential_proxy: bool = Field(
+        alias="residentialProxy", description="Residential proxy enabled"
+    )
+    residential_proxy_geo: ResponseGeoLocation = Field(
+        alias="residentialProxyGeo", description="Residential proxy geography"
+    )
 
     # Additional settings
     timeout: int = Field(ge=10, le=1200, description="Timeout in seconds")
@@ -105,11 +136,14 @@ class UserPresetResponse(BaseModel):
     el: bool = Field(description="Elevation prompt")
     no_controls: bool = Field(alias="noControls", description="No controls")
     expiration_time: str = Field(alias="expirationTime", description="Expiration time")
-    expiration_time_selected: bool = Field(alias="expirationTimeSelected", description="Expiration time selected")
+    expiration_time_selected: bool = Field(
+        alias="expirationTimeSelected", description="Expiration time selected"
+    )
 
 
 class UserPresetsResponse(BaseModel):
     """User presets response."""
+
     error: Literal[False] = Field(False, description="Error flag")
     data: List[UserPresetResponse] = Field(description="List of user presets")
 
@@ -135,7 +169,10 @@ class UserPresetsResponse(BaseModel):
         """
         if isinstance(obj, list):
             # API returns list of presets directly
-            return cls(error=False, data=[UserPresetResponse.model_validate(item) for item in obj])
+            return cls(
+                error=False,
+                data=[UserPresetResponse.model_validate(item) for item in obj],
+            )
         elif isinstance(obj, dict):
             # API returns wrapped response
             return cls(

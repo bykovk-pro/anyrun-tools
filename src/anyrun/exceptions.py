@@ -42,9 +42,7 @@ class RetryError(APIError):
         """
         self.attempts = attempts
         self.last_error = last_error
-        super().__init__(
-            f"Failed after {attempts} attempts. Last error: {str(last_error)}"
-        )
+        super().__init__(f"Failed after {attempts} attempts. Last error: {str(last_error)}")
 
 
 class AuthenticationError(APIError):

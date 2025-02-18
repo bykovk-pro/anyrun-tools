@@ -154,13 +154,9 @@ class AnalysisRequest(BaseModel):
     opt_network_connect: Optional[bool] = Field(
         default=True, description="Network connection state"
     )
-    opt_network_fakenet: Optional[bool] = Field(
-        default=False, description="FakeNet feature status"
-    )
+    opt_network_fakenet: Optional[bool] = Field(default=False, description="FakeNet feature status")
     opt_network_tor: Optional[bool] = Field(default=False, description="TOR using")
-    opt_network_mitm: Optional[bool] = Field(
-        default=False, description="HTTPS MITM proxy option"
-    )
+    opt_network_mitm: Optional[bool] = Field(default=False, description="HTTPS MITM proxy option")
 
     # Privacy options
     opt_privacy_type: Optional[PrivacyType] = Field(
@@ -173,7 +169,7 @@ class AnalysisRequest(BaseModel):
     # Advanced options
     opt_chatgpt: Optional[bool] = None
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def validate_request(self) -> "AnalysisRequest":
         """Validate request.
 
@@ -206,15 +202,9 @@ class AnalysisRequest(BaseModel):
                     "Invalid Windows version. Supported: "
                     f"{list(WindowsVersion._value2member_map_.keys())}"
                 )
-            if (
-                self.env_version == WindowsVersion.WIN11
-                and self.env_bitness != BitnessType.X64
-            ):
+            if self.env_version == WindowsVersion.WIN11 and self.env_bitness != BitnessType.X64:
                 raise ValueError("Windows 11 supports only 64-bit")
-            if (
-                self.env_type == EnvType.OFFICE
-                and self.env_version == WindowsVersion.WIN11
-            ):
+            if self.env_type == EnvType.OFFICE and self.env_version == WindowsVersion.WIN11:
                 raise ValueError("Windows 11 does not support office environment")
             if self.run_as_root:
                 raise ValueError("Run as root is not supported for Windows")
@@ -228,11 +218,7 @@ class AnalysisRequest(BaseModel):
                 raise ValueError("Linux supports only 64-bit")
             if self.env_type != EnvType.OFFICE:
                 raise ValueError("Linux supports only office environment")
-            if (
-                self.obj_ext_elevateprompt
-                or self.obj_force_elevation
-                or self.auto_confirm_uac
-            ):
+            if self.obj_ext_elevateprompt or self.obj_force_elevation or self.auto_confirm_uac:
                 raise ValueError("UAC options are not supported for Linux")
 
         # Validate browser
@@ -251,8 +237,7 @@ class AnalysisRequest(BaseModel):
             elif self.env_os == OSType.LINUX:
                 if self.env_browser not in [Browser.CHROME, Browser.FIREFOX]:
                     raise ValueError(
-                        "Invalid browser for Linux. Supported: "
-                        "Google Chrome, Mozilla Firefox"
+                        "Invalid browser for Linux. Supported: " "Google Chrome, Mozilla Firefox"
                     )
 
         # Validate start folder
@@ -302,9 +287,7 @@ class AnalysisResponse(BaseModel):
 class AnalysisListRequest(BaseModel):
     """Analysis list request parameters."""
 
-    team: bool = Field(
-        default=False, description="Get team history instead of personal"
-    )
+    team: bool = Field(default=False, description="Get team history instead of personal")
     skip: int = Field(default=0, ge=0, description="Number of items to skip")
     limit: int = Field(default=25, ge=1, le=100, description="Number of items per page")
 

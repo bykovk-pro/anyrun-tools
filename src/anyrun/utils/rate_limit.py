@@ -66,9 +66,7 @@ class RateLimiter:
             ValueError: If requested tokens exceeds burst size
         """
         if tokens > self.burst:
-            raise ValueError(
-                f"Requested tokens ({tokens}) exceeds burst size ({self.burst})"
-            )
+            raise ValueError(f"Requested tokens ({tokens}) exceeds burst size ({self.burst})")
 
         state = self._state[self.key]
         async with state["lock"]:
@@ -117,9 +115,7 @@ class RateLimiter:
             async with state["lock"]:
                 now = time.monotonic()
                 time_passed = now - state["last_update"]
-                available = min(
-                    state["tokens"] + time_passed * self.rate, float(self.burst)
-                )
+                available = min(state["tokens"] + time_passed * self.rate, float(self.burst))
                 return available >= tokens
         except Exception:
             return False

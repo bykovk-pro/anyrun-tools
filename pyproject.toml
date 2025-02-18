@@ -57,16 +57,32 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 ignore_missing_imports = true
+files = ["src/anyrun"]
 
 [tool.black]
-line-length = 88
+line-length = 100
 target-version = ['py38']
-include = '\.pyi?$'
-extend-exclude = '''
-# A regex preceded with ^/ will apply only to files and directories
-# in the root of the project.
-^/docs/
-'''
+include = 'src/anyrun/.*\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["src/anyrun"]
+known_first_party = ["anyrun"]
+known_third_party = ["httpx", "pydantic", "redis", "tenacity"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203"]
+per-file-ignores = ["__init__.py:F401"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+src_paths = ["src/anyrun"]
 
 [build-system]
 requires = ["poetry-core"]

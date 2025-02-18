@@ -1,86 +1,57 @@
 """Configuration for ANY.RUN API client."""
 
-from typing import Dict, Optional, Union, TypeVar, Type
+from typing import Dict, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-from .constants import (
-    API_BASE_URL,
-    DEFAULT_CACHE_PREFIX,
-    DEFAULT_CACHE_TTL,
-    DEFAULT_RATE_LIMIT,
-    DEFAULT_RATE_LIMIT_WINDOW,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_RETRY_DELAY,
-    DEFAULT_TIMEOUT,
-    MAX_RETRY_DELAY,
-    APIVersion,
-)
-from .types import CacheBackend, LogLevel, RateLimitBackend, RetryStrategy
-
+from .constants import DEFAULT_TIMEOUT, DEFAULT_USER_AGENT
+from .types import CacheBackend, LogLevel, RetryStrategy
 
 T = TypeVar("T", bound="BaseConfig")
 
 
 class BaseConfig(BaseModel):
-    """Base configuration model."""
+    """Base configuration for ANY.RUN client."""
 
     model_config = ConfigDict(
-        validate_assignment=True, arbitrary_types_allowed=True, extra="allow"
+        validate_assignment=True,
+        frozen=False,
+        extra="ignore",
     )
 
-    api_key: str = Field(..., description="API key")
-    base_url: HttpUrl = Field(default=HttpUrl(API_BASE_URL), description="Base URL")
-    api_version: APIVersion = Field(default=APIVersion.V1, description="API version")
-    timeout: float = Field(
-        default=float(DEFAULT_TIMEOUT), description="Request timeout in seconds"
-    )
+    # API configuration
+    api_key: str = Field(min_length=1, description="ANY.RUN API key")
+    base_url: HttpUrl = Field(description="Base URL for API requests")
+    api_version: str = Field(default="v1", description="API version")
+
+    # HTTP client configuration
+    timeout: float = Field(default=DEFAULT_TIMEOUT, ge=0, description="Request timeout in seconds")
+    user_agent: str = Field(default=DEFAULT_USER_AGENT, description="User agent string")
     verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
-    proxies: Optional[Dict[str, str]] = Field(None, description="HTTP/HTTPS proxies")
-    user_agent: Optional[str] = Field(None, description="User agent string")
-    headers: Dict[str, str] = Field(
-        default_factory=dict, description="Additional headers"
-    )
+    headers: Dict[str, str] = Field(default_factory=dict, description="Additional HTTP headers")
+    proxies: Dict[str, str] = Field(default_factory=dict, description="HTTP/HTTPS proxies")
 
-    # Cache settings
-    cache_enabled: bool = Field(default=True, description="Enable caching")
+    # Cache configuration
+    cache_enabled: bool = Field(default=True, description="Enable response caching")
+    cache_ttl: int = Field(default=300, ge=0, description="Cache TTL in seconds")
     cache_backend: CacheBackend = Field(
-        default=CacheBackend.MEMORY, description="Cache backend"
-    )
-    cache_ttl: int = Field(
-        default=DEFAULT_CACHE_TTL, description="Cache TTL in seconds"
-    )
-    cache_prefix: str = Field(
-        default=DEFAULT_CACHE_PREFIX, description="Cache key prefix"
+        default=CacheBackend.MEMORY,
+        description="Cache backend type",
     )
 
-    # Rate limit settings
+    # Rate limiting configuration
     rate_limit_enabled: bool = Field(default=True, description="Enable rate limiting")
-    rate_limit_backend: RateLimitBackend = Field(
-        default=RateLimitBackend.MEMORY, description="Rate limit backend"
-    )
-    rate_limit: int = Field(
-        default=DEFAULT_RATE_LIMIT, description="Rate limit (requests per second)"
-    )
-    rate_limit_window: float = Field(
-        default=DEFAULT_RATE_LIMIT_WINDOW, description="Rate limit window in seconds"
-    )
 
-    # Retry settings
-    retry_enabled: bool = Field(default=True, description="Enable retries")
+    # Retry configuration
     retry_strategy: RetryStrategy = Field(
-        default=RetryStrategy.EXPONENTIAL, description="Retry strategy"
+        default=RetryStrategy.EXPONENTIAL,
+        description="Retry strategy",
     )
-    retry_max_attempts: int = Field(
-        default=DEFAULT_RETRY_COUNT, description="Maximum retry attempts"
-    )
+    retry_max_attempts: int = Field(default=3, ge=1, description="Maximum retry attempts")
     retry_initial_delay: float = Field(
-        default=DEFAULT_RETRY_DELAY, description="Initial retry delay in seconds"
+        default=1.0, ge=0, description="Initial retry delay in seconds"
     )
-    retry_max_delay: float = Field(
-        default=MAX_RETRY_DELAY, description="Maximum retry delay in seconds"
-    )
-    retry_backoff_factor: float = Field(default=2.0, description="Retry backoff factor")
+    retry_max_delay: float = Field(default=60.0, ge=0, description="Maximum retry delay in seconds")
 
     # Logging settings
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Log level")
@@ -88,11 +59,3 @@ class BaseConfig(BaseModel):
         default="[{time}] {level} {message}",
         description="Log format string",
     )
-
-    @field_validator("base_url", mode="before")
-    @classmethod
-    def validate_base_url(cls: Type[T], v: Union[str, HttpUrl]) -> HttpUrl:
-        """Validate and convert base_url to HttpUrl."""
-        if isinstance(v, str):
-            return HttpUrl(v)
-        return v

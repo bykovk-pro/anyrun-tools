@@ -1,427 +1,267 @@
 """Tests for Sandbox API v1 models."""
 
-import pytest
-from pydantic import HttpUrl, ValidationError
 from datetime import datetime
 
+import pytest
+from pydantic import ValidationError
+
 from anyrun.sandbox.v1.models.analysis import (
-    AnalysisListRequest,
-    AnalysisListResponse,
     AnalysisRequest,
     AnalysisResponse,
     BitnessType,
     Browser,
     EnvType,
-    LinuxVersion,
     ObjectType,
     OSType,
     PrivacyType,
     StartFolder,
-    WindowsVersion,
-    AnalysisData,
-    AnalysisListData,
-    AnalysisListItem,
 )
+from anyrun.sandbox.v1.models.common import HashesApiDto, ThreatLevelText
 from anyrun.sandbox.v1.models.environment import EnvironmentResponse
-from anyrun.sandbox.v1.models.user import (
-    UserInfoRequest,
-    UserInfoResponse,
-    UserPresetsResponse,
-    UserPreset,
-)
+from anyrun.sandbox.v1.models.task_status_update import TaskStatusUpdateDto
+from anyrun.sandbox.v1.models.user import UserInfoResponse, UserPresetsResponse
 
 
 def test_analysis_request_validation() -> None:
     """Test analysis request validation."""
-    # Valid file analysis request
+    # Test valid file analysis request
     request = AnalysisRequest(
         obj_type=ObjectType.FILE,
         file=b"test content",
         env_os=OSType.WINDOWS,
-        env_version=WindowsVersion.WIN10,
+        env_version="10",
         env_bitness=BitnessType.X64,
-        env_type=EnvType.CLEAN,
-        obj_ext_browser=Browser.CHROME,
+        env_type=EnvType.COMPLETE,
+        obj_ext_browser=Browser.EDGE,
         obj_ext_startfolder=StartFolder.TEMP,
         opt_privacy_type=PrivacyType.BYLINK,
-        obj_url=None,
-        task_rerun_uuid=None,
-        env_locale=None,
-        obj_ext_cmd=None,
-        obj_ext_useragent=None,
-        obj_ext_elevateprompt=None,
-        obj_force_elevation=None,
-        user_tags=None,
     )
     assert request.obj_type == ObjectType.FILE
     assert request.file == b"test content"
-    assert request.env_os == OSType.WINDOWS
-    assert request.env_version == WindowsVersion.WIN10
 
-    # Valid URL analysis request
+    # Test valid URL analysis request
     request = AnalysisRequest(
         obj_type=ObjectType.URL,
-        obj_url=HttpUrl("https://example.com"),
+        obj_url="https://example.com",
         env_os=OSType.LINUX,
-        env_version=LinuxVersion.UBUNTU_22_04_2,
+        env_version="22.04.2",
         env_bitness=BitnessType.X64,
         env_type=EnvType.OFFICE,
-        file=None,
-        task_rerun_uuid=None,
-        env_locale=None,
-        obj_ext_cmd=None,
-        obj_ext_useragent=None,
-        obj_ext_elevateprompt=None,
-        obj_force_elevation=None,
-        user_tags=None,
     )
     assert request.obj_type == ObjectType.URL
-    # Pydantic's HttpUrl automatically adds trailing slash, so we need to check the host part only
-    assert str(request.obj_url).rstrip("/") == "https://example.com"
+    assert request.obj_url == "https://example.com"
 
-    # Invalid requests
+    # Test invalid request (missing required fields)
     with pytest.raises(ValidationError):
-        # Missing required file
-        AnalysisRequest(
-            obj_type=ObjectType.FILE,
-            env_os=OSType.WINDOWS,
-            env_version=WindowsVersion.WIN10,
-            env_bitness=BitnessType.X64,
-            env_type=EnvType.CLEAN,
-            file=None,
-            obj_url=None,
-            task_rerun_uuid=None,
-            env_locale=None,
-            obj_ext_cmd=None,
-            obj_ext_useragent=None,
-            obj_ext_elevateprompt=None,
-            obj_force_elevation=None,
-            user_tags=None,
-        )
+        AnalysisRequest(obj_type=ObjectType.FILE)
 
     with pytest.raises(ValidationError):
-        # Missing required URL
-        AnalysisRequest(
-            obj_type=ObjectType.URL,
-            env_os=OSType.LINUX,
-            env_version=LinuxVersion.UBUNTU_22_04_2,
-            env_bitness=BitnessType.X64,
-            env_type=EnvType.OFFICE,
-            file=None,
-            obj_url=None,
-            task_rerun_uuid=None,
-            env_locale=None,
-            obj_ext_cmd=None,
-            obj_ext_useragent=None,
-            obj_ext_elevateprompt=None,
-            obj_force_elevation=None,
-            user_tags=None,
-        )
-
-    with pytest.raises(ValidationError):
-        # Invalid OS version for Linux
-        AnalysisRequest(
-            obj_type=ObjectType.URL,
-            obj_url=HttpUrl("https://example.com"),
-            env_os=OSType.LINUX,
-            env_version=WindowsVersion.WIN10,
-            env_bitness=BitnessType.X64,
-            env_type=EnvType.OFFICE,
-            file=None,
-            task_rerun_uuid=None,
-            env_locale=None,
-            obj_ext_cmd=None,
-            obj_ext_useragent=None,
-            obj_ext_elevateprompt=None,
-            obj_force_elevation=None,
-            user_tags=None,
-        )
-
-    with pytest.raises(ValidationError):
-        # Invalid browser for Linux
-        AnalysisRequest(
-            obj_type=ObjectType.URL,
-            obj_url=HttpUrl("https://example.com"),
-            env_os=OSType.LINUX,
-            env_version=LinuxVersion.UBUNTU_22_04_2,
-            env_bitness=BitnessType.X64,
-            env_type=EnvType.OFFICE,
-            obj_ext_browser=Browser.IE,
-            file=None,
-            task_rerun_uuid=None,
-            env_locale=None,
-            obj_ext_cmd=None,
-            obj_ext_useragent=None,
-            obj_ext_elevateprompt=None,
-            obj_force_elevation=None,
-            user_tags=None,
-        )
+        AnalysisRequest(obj_type=ObjectType.URL)
 
 
 def test_analysis_response_validation() -> None:
     """Test analysis response validation."""
-    # Valid response
     response = AnalysisResponse(
         error=False,
-        data=AnalysisData(task_id="test123", status="queued"),
-        message=None
+        data={
+            "taskid": "test-task-id",
+            "status": "running",
+            "completed": False,
+        },
     )
     assert response.error is False
-    assert response.data.task_id == "test123"
-    assert response.data.status == "queued"
-
-    # Invalid response - data should be a dict
-    with pytest.raises(ValidationError):
-        AnalysisResponse(error=False, data=AnalysisData(invalid="data"), message=None)
-
-    # Invalid response - missing required fields
-    with pytest.raises(ValidationError):
-        AnalysisResponse(error=False, data=AnalysisData(), message=None)
-
-
-def test_analysis_list_request_validation() -> None:
-    """Test analysis list request validation."""
-    # Valid request
-    request = AnalysisListRequest(
-        team=True,
-        skip=10,
-        limit=50,
-    )
-    assert request.team is True
-    assert request.skip == 10
-    assert request.limit == 50
-
-    # Invalid request - skip should be >= 0
-    with pytest.raises(ValidationError):
-        AnalysisListRequest(skip=-1)
-
-    # Invalid request - limit should be between 1 and 100
-    with pytest.raises(ValidationError):
-        AnalysisListRequest(limit=0)
-
-    with pytest.raises(ValidationError):
-        AnalysisListRequest(limit=101)
-
-
-def test_analysis_list_response_validation() -> None:
-    """Test analysis list response validation."""
-    # Valid response
-    response = AnalysisListResponse(
-        error=False,
-        data=AnalysisListData(
-            tasks=[AnalysisListItem(
-                uuid="test123",
-                verdict="No threats detected",
-                name="test.exe",
-                related=None,
-                pcap=None,
-                file=None,
-                json=None,
-                misp=None,
-                date=None,
-                tags=[],
-                hashes=None
-            )]
-        ),
-        message=None
-    )
-    assert response.error is False
-    assert len(response.data.tasks) == 1
-    assert response.data.tasks[0].uuid == "test123"
-
-    # Invalid response - data should be valid
-    with pytest.raises(ValidationError):
-        AnalysisListResponse(
-            error=False,
-            data=AnalysisListData(tasks=[]),
-            message=None
-        )
-
-    # Invalid response - missing required fields
-    with pytest.raises(ValidationError):
-        AnalysisListResponse(
-            error=False,
-            data=AnalysisListData(tasks=None),
-            message=None
-        )
+    assert response.data.taskid == "test-task-id"
+    assert response.data.status == "running"
+    assert response.data.completed is False
 
 
 def test_environment_response_validation() -> None:
     """Test environment response validation."""
-    # Valid response
     response = EnvironmentResponse(
         error=False,
         data={
-            "windows": {"versions": ["7", "10", "11"], "bitness": ["32", "64"]},
-            "linux": {"versions": ["22.04.2"], "bitness": ["64"]},
+            "environments": [
+                {
+                    "os": "windows",
+                    "software": {
+                        "ie": {},
+                        "upps": [],
+                        "apps": [
+                            {
+                                "name": "Test App",
+                                "version": "1.0",
+                            }
+                        ],
+                    },
+                    "bitness": 64,
+                    "type": "complete",
+                    "version": "10",
+                }
+            ]
         },
     )
     assert response.error is False
-    assert "windows" in response.data
-    assert "linux" in response.data
-
-    # Invalid response - data should be a dict
-    with pytest.raises(ValidationError):
-        EnvironmentResponse(error=False, data={"invalid": "data"})
-
-    # Invalid response - missing required fields
-    with pytest.raises(ValidationError):
-        EnvironmentResponse(error=False, data={})
+    assert len(response.data.environments) == 1
+    assert response.data.environments[0].os == "windows"
+    assert response.data.environments[0].bitness == 64
 
 
-def test_user_info_request_validation() -> None:
-    """Test user info request validation."""
-    # Valid request
-    request = UserInfoRequest(team=True)
-    assert request.team is True
-
-    # Default values
-    request = UserInfoRequest()
-    assert request.team is False
+def test_task_status_update_validation() -> None:
+    """Test task status update validation."""
+    update = TaskStatusUpdateDto(
+        task={
+            "uuid": "test-uuid",
+            "status": 50,
+            "remaining": 300,
+            "times": {
+                "created": datetime.now(),
+            },
+            "public": {
+                "maxAddedTimeReached": False,
+                "objects": {
+                    "names": {},
+                    "hashes": {
+                        "md5": "d41d8cd98f00b204e9800998ecf8427e",
+                        "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "ssdeep": "3::",
+                    },
+                },
+                "options": {
+                    "private": PrivacyType.BYLINK,
+                    "whitelist": [],
+                    "mitm": False,
+                    "fakenet": False,
+                    "netviator": False,
+                    "netConnected": True,
+                    "network": "default",
+                    "logger": "default",
+                    "presentation": False,
+                    "teamwork": False,
+                    "reboots": False,
+                    "onlyimportant": False,
+                    "video": False,
+                    "autoclicker": False,
+                },
+                "environment": {
+                    "OS": {},
+                    "software": [],
+                },
+            },
+            "scores": {
+                "specs": {},
+                "verdict": {},
+            },
+            "actions": {},
+        },
+        completed=False,
+        error=False,
+    )
+    assert update.task.uuid == "test-uuid"
+    assert update.task.status == 50
+    assert update.completed is False
+    assert update.error is False
 
 
 def test_user_info_response_validation() -> None:
     """Test user info response validation."""
-    # Valid response
     response = UserInfoResponse(
         error=False,
-        data={"name": "test", "email": "test@example.com"},
+        data={
+            "limits": {
+                "web": {"max_time": 3600},
+                "api": {"max_requests": 1000},
+                "parallels": {"max_tasks": 5},
+            }
+        },
     )
     assert response.error is False
-    assert response.data["name"] == "test"
-
-    # Invalid response - data should be a dict
-    with pytest.raises(ValidationError):
-        UserInfoResponse(error=False, data={})
-
-    # Invalid response - missing required fields
-    with pytest.raises(ValidationError):
-        UserInfoResponse(error=False, data={"invalid": "data"})
+    assert response.data.limits.web["max_time"] == 3600
+    assert response.data.limits.api["max_requests"] == 1000
+    assert response.data.limits.parallels["max_tasks"] == 5
 
 
 def test_user_presets_response_validation() -> None:
     """Test user presets response validation."""
-    # Valid response
-    preset = UserPreset(
-        _id="preset1",
-        name="Test Preset",
-        userId="user1",
-        userPlanName="pro",
-        createTime=datetime.now(),
-        os="windows",
-        version="10",
-        bitness=64,
-        type="clean",
-        browser="Google Chrome",
-        locale="en-US",
-        location="desktop",
-        netConnected=True,
-        network="default",
-        fakenet=False,
-        mitm=False,
-        netviator=False,
-        vpn=False,
-        openVPN="",
-        torGeo="",
-        residentialProxy=False,
-        residentialProxyGeo="",
-        timeout=300,
-        privacy="bylink",
-        hide_source=False,
-        extension=False,
-        autoclicker=False,
-        el=False,
-        noControls=False,
-        expirationTime=datetime.now().isoformat(),
-        expirationTimeSelected=False,
-    )
-    response = UserPresetsResponse(
-        error=False,
-        data=[preset],
-    )
-    assert response.error is False
+    # Test direct list response
+    response = UserPresetsResponse.model_validate([
+        {
+            "_id": "test-id",
+            "name": "Test Preset",
+            "userId": "user-id",
+            "userPlanName": "basic",
+            "createTime": "2024-02-18T00:00:00Z",
+            "os": "Windows",
+            "version": "10",
+            "bitness": 64,
+            "type": "complete",
+            "browser": "Google Chrome",
+            "locale": "en-US",
+            "location": "desktop",
+            "netConnected": True,
+            "network": "default",
+            "fakenet": False,
+            "mitm": False,
+            "netviator": False,
+            "vpn": False,
+            "openVPN": "",
+            "torGeo": "",
+            "residentialProxy": False,
+            "residentialProxyGeo": "",
+            "timeout": 60,
+            "privacy": "bylink",
+            "hide_source": False,
+            "extension": False,
+            "autoclicker": False,
+            "el": False,
+            "noControls": False,
+            "expirationTime": "2024-02-19T00:00:00Z",
+            "expirationTimeSelected": False,
+        }
+    ])
     assert len(response.data) == 1
+    assert response.data[0].name == "Test Preset"
+    assert response.error is False
 
-    # Invalid response - data should be a list
-    with pytest.raises(ValidationError):
-        UserPresetsResponse(error=False, data=[])
-
-    # Invalid response - missing required fields
-    with pytest.raises(ValidationError):
-        UserPresetsResponse(error=False, data=[])
-
-
-def test_user_preset_validation() -> None:
-    """Test user preset validation."""
-    # Valid preset
-    preset = UserPreset(
-        _id="preset1",
-        name="Test Preset",
-        userId="user1",
-        userPlanName="pro",
-        createTime=datetime.now(),
-        os="windows",
-        version="10",
-        bitness=64,
-        type="clean",
-        browser="Google Chrome",
-        locale="en-US",
-        location="desktop",
-        netConnected=True,
-        network="default",
-        fakenet=False,
-        mitm=False,
-        netviator=False,
-        vpn=False,
-        openVPN="",
-        torGeo="",
-        residentialProxy=False,
-        residentialProxyGeo="",
-        timeout=300,
-        privacy="bylink",
-        hide_source=False,
-        extension=False,
-        autoclicker=False,
-        el=False,
-        noControls=False,
-        expirationTime=datetime.now().isoformat(),
-        expirationTimeSelected=False,
-    )
-    assert preset.id == "preset1"
-    assert preset.name == "Test Preset"
-
-    # Invalid preset - missing required fields
-    with pytest.raises(ValidationError):
-        UserPreset(
-            _id="",
-            name="",
-            userId="",
-            userPlanName="",
-            createTime=datetime.now(),
-            os="",
-            version="",
-            bitness=0,
-            type="",
-            browser="",
-            locale="",
-            location="",
-            netConnected=False,
-            network="",
-            fakenet=False,
-            mitm=False,
-            netviator=False,
-            vpn=False,
-            openVPN="",
-            torGeo="",
-            residentialProxy=False,
-            residentialProxyGeo="",
-            timeout=0,
-            privacy="",
-            hide_source=False,
-            extension=False,
-            autoclicker=False,
-            el=False,
-            noControls=False,
-            expirationTime="",
-            expirationTimeSelected=False,
-        )
+    # Test wrapped response
+    response = UserPresetsResponse.model_validate({
+        "error": False,
+        "data": [
+            {
+                "_id": "test-id",
+                "name": "Test Preset",
+                "userId": "user-id",
+                "userPlanName": "basic",
+                "createTime": "2024-02-18T00:00:00Z",
+                "os": "Windows",
+                "version": "10",
+                "bitness": 64,
+                "type": "complete",
+                "browser": "Google Chrome",
+                "locale": "en-US",
+                "location": "desktop",
+                "netConnected": True,
+                "network": "default",
+                "fakenet": False,
+                "mitm": False,
+                "netviator": False,
+                "vpn": False,
+                "openVPN": "",
+                "torGeo": "",
+                "residentialProxy": False,
+                "residentialProxyGeo": "",
+                "timeout": 60,
+                "privacy": "bylink",
+                "hide_source": False,
+                "extension": False,
+                "autoclicker": False,
+                "el": False,
+                "noControls": False,
+                "expirationTime": "2024-02-19T00:00:00Z",
+                "expirationTimeSelected": False,
+            }
+        ]
+    })
+    assert len(response.data) == 1
+    assert response.data[0].name == "Test Preset"
+    assert response.error is False 

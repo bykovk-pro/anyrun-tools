@@ -1,10 +1,6 @@
 """Sandbox API client."""
 
-__all__ = ["SandboxClient"]
-
-"""Sandbox API client factory."""
-
-from typing import Any, Dict, Optional, Type
+from typing import Dict, Optional
 
 from pydantic import HttpUrl
 
@@ -16,7 +12,11 @@ def create_sandbox_client(
     api_key: str,
     version: str = "v1",
     base_url: Optional[HttpUrl] = None,
-    **kwargs: Any,
+    timeout: Optional[int] = None,
+    verify_ssl: bool = True,
+    proxies: Optional[Dict[str, str]] = None,
+    user_agent: Optional[str] = None,
+    headers: Optional[Dict[str, str]] = None,
 ) -> BaseSandboxClient:
     """Create sandbox client instance.
 
@@ -24,7 +24,11 @@ def create_sandbox_client(
         api_key: ANY.RUN API key
         version: API version
         base_url: Base URL for API requests
-        **kwargs: Additional client options
+        timeout: Request timeout in seconds
+        verify_ssl: Verify SSL certificates
+        proxies: HTTP/HTTPS proxies
+        user_agent: User agent string
+        headers: Additional headers
 
     Returns:
         BaseSandboxClient: Sandbox client instance
@@ -32,18 +36,17 @@ def create_sandbox_client(
     Raises:
         ValueError: If version is not supported
     """
-    clients: Dict[str, Type[BaseSandboxClient]] = {
-        "v1": SandboxClientV1,
-    }
-
-    if version not in clients:
-        raise ValueError(
-            f"Unsupported API version: {version}. "
-            f"Supported versions: {', '.join(clients.keys())}"
+    if version == "v1":
+        return SandboxClientV1(
+            api_key=api_key,
+            base_url=base_url,
+            timeout=timeout,
+            verify_ssl=verify_ssl,
+            proxies=proxies,
+            user_agent=user_agent,
+            headers=headers,
         )
-
-    client_class = clients[version]
-    return client_class(api_key=api_key, base_url=base_url, **kwargs)
+    raise ValueError(f"Unsupported version: {version}")
 
 
 __all__ = ["create_sandbox_client", "BaseSandboxClient"]

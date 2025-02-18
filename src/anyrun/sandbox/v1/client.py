@@ -1,34 +1,26 @@
 """Sandbox API v1 client implementation."""
 
-import asyncio
 import json
 import os
-from typing import Any, AsyncGenerator, Dict, Optional, Union, cast
+from typing import Any, AsyncGenerator, Dict, Union, cast
 
 import httpx
 from loguru import logger
 from pydantic import HttpUrl
 
-from ...exceptions import (
-    APIError,
-    ValidationError,
-    AuthenticationError,
-    NotFoundError,
-    RateLimitError,
-    ServerError,
-)
+from ...exceptions import APIError, ValidationError
 from ..base import BaseSandboxClient
 from .endpoints import (
+    ANALYSIS_ADD_TIME,
     ANALYSIS_CREATE,
+    ANALYSIS_DELETE,
     ANALYSIS_GET,
     ANALYSIS_LIST,
     ANALYSIS_MONITOR,
+    ANALYSIS_STOP,
     ENVIRONMENT_INFO,
     USER_INFO,
     USER_PRESETS,
-    ANALYSIS_ADD_TIME,
-    ANALYSIS_STOP,
-    ANALYSIS_DELETE,
 )
 from .models.analysis import (
     AddTimeResponse,
@@ -37,16 +29,16 @@ from .models.analysis import (
     AnalysisRequest,
     AnalysisResponse,
     DeleteAnalysisResponse,
-    ObjectType,
-    StopAnalysisResponse,
-    FileAnalysisRequest,
-    URLAnalysisRequest,
-    RerunAnalysisRequest,
     DownloadAnalysisRequest,
+    FileAnalysisRequest,
+    ObjectType,
+    RerunAnalysisRequest,
+    StopAnalysisResponse,
+    URLAnalysisRequest,
 )
 from .models.environment import EnvironmentResponse
-from .models.user import UserInfoResponse, UserPresetsResponse
 from .models.task_status_update import TaskStatusUpdateDto
+from .models.user import UserInfoResponse, UserPresetsResponse
 
 
 class SandboxClientV1(
@@ -167,7 +159,7 @@ class SandboxClientV1(
             logger.debug(f"API response text: {response.text}")
 
             result = await self._handle_response(response)
-            return AnalysisResponse.model_validate(result)
+            return cast(AnalysisResponse, AnalysisResponse.model_validate(result))
 
         except ValidationError as e:
             logger.error(f"Validation error: {str(e)}")
@@ -198,7 +190,7 @@ class SandboxClientV1(
         )
 
         result = await self._handle_response(response)
-        return AnalysisResponse.model_validate(result)
+        return cast(AnalysisResponse, AnalysisResponse.model_validate(result))
 
     async def list_analyses(self, **kwargs: Any) -> AnalysisListResponse:
         """Get list of analyses.
@@ -223,7 +215,7 @@ class SandboxClientV1(
             )
 
             result = await self._handle_response(response)
-            return AnalysisListResponse.model_validate(result)
+            return cast(AnalysisListResponse, AnalysisListResponse.model_validate(result))
 
         except ValidationError as e:
             raise ValidationError(f"Invalid list parameters: {str(e)}")
@@ -246,7 +238,7 @@ class SandboxClientV1(
         )
 
         result = await self._handle_response(response)
-        return EnvironmentResponse.model_validate(result)
+        return cast(EnvironmentResponse, EnvironmentResponse.model_validate(result))
 
     async def user_info(self) -> UserInfoResponse:
         """Get user information and limits.
@@ -264,7 +256,7 @@ class SandboxClientV1(
         )
 
         result = await self._handle_response(response)
-        return UserInfoResponse.model_validate(result)
+        return cast(UserInfoResponse, UserInfoResponse.model_validate(result))
 
     async def get_user_presets(self) -> UserPresetsResponse:
         """Get user presets.
@@ -310,7 +302,7 @@ class SandboxClientV1(
         )
 
         result = await self._handle_response(response)
-        return AddTimeResponse.model_validate(result)
+        return cast(AddTimeResponse, AddTimeResponse.model_validate(result))
 
     async def stop_analysis(self, task_id: str) -> StopAnalysisResponse:
         """Stop running analysis.
@@ -331,7 +323,7 @@ class SandboxClientV1(
         )
 
         result = await self._handle_response(response)
-        return StopAnalysisResponse.model_validate(result)
+        return cast(StopAnalysisResponse, StopAnalysisResponse.model_validate(result))
 
     async def delete_analysis(self, task_id: str) -> DeleteAnalysisResponse:
         """Delete analysis.
@@ -352,11 +344,9 @@ class SandboxClientV1(
         )
 
         result = await self._handle_response(response)
-        return DeleteAnalysisResponse.model_validate(result)
+        return cast(DeleteAnalysisResponse, DeleteAnalysisResponse.model_validate(result))
 
-    async def analyze_file(
-        self, file: Union[str, bytes], **kwargs: Any
-    ) -> AnalysisResponse:
+    async def analyze_file(self, file: Union[str, bytes], **kwargs: Any) -> AnalysisResponse:
         """Submit file for analysis.
 
         Args:
@@ -375,9 +365,7 @@ class SandboxClientV1(
         request = FileAnalysisRequest(**kwargs)
         return await self.analyze(**request.model_dump())
 
-    async def analyze_url(
-        self, url: Union[str, HttpUrl], **kwargs: Any
-    ) -> AnalysisResponse:
+    async def analyze_url(self, url: Union[str, HttpUrl], **kwargs: Any) -> AnalysisResponse:
         """Submit URL for analysis.
 
         Args:
@@ -396,9 +384,7 @@ class SandboxClientV1(
         request = URLAnalysisRequest(**kwargs)
         return await self.analyze(**request.model_dump())
 
-    async def rerun_analysis(
-        self, task_uuid: str, **kwargs: Any
-    ) -> AnalysisResponse:
+    async def rerun_analysis(self, task_uuid: str, **kwargs: Any) -> AnalysisResponse:
         """Rerun existing analysis.
 
         Args:
@@ -476,9 +462,7 @@ class SandboxClientV1(
                 except Exception as e:
                     raise APIError(f"Error processing SSE response: {str(e)}") from e
 
-    async def analyze_download(
-        self, url: Union[str, HttpUrl], **kwargs: Any
-    ) -> AnalysisResponse:
+    async def analyze_download(self, url: Union[str, HttpUrl], **kwargs: Any) -> AnalysisResponse:
         """Submit URL for download and analysis.
 
         Args:
