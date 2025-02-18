@@ -27,7 +27,7 @@ pytest-asyncio = ">=0.23.0,<1.0.0"
 pytest-cov = ">=4.1.0,<5.0.0"
 pytest-mock = ">=3.10.0,<4.0.0"
 respx = ">=0.20.0,<1.0.0"
-coverage = {version = ">=7.2.0,<8.0.0", extras = ["toml"]}
+coverage = { version = ">=7.2.0,<8.0.0", extras = ["toml"] }
 tox = ">=4.11.0,<5.0.0"
 tox-gh-actions = ">=3.1.0,<4.0.0"
 black = ">=24.2.0,<25.0.0"
@@ -74,6 +74,7 @@ known_third_party = ["httpx", "pydantic", "redis", "tenacity"]
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203"]
+per-file-ignores = ["__init__.py:F401"]
 exclude = [
     ".git",
     "__pycache__",
