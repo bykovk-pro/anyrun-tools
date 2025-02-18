@@ -94,7 +94,8 @@ data_file = ".coverage"
 [tool.coverage.paths]
 source = [
     "src/anyrun",
-    "*/site-packages/anyrun"
+    "*/site-packages/anyrun",
+    "*/Lib/site-packages/anyrun"
 ]
 
 [tool.coverage.report]
