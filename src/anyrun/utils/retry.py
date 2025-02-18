@@ -6,12 +6,12 @@ import asyncio
 import functools
 import random
 from dataclasses import dataclass
-from typing import Awaitable, Callable, TypeVar
+from typing import Awaitable, Callable, Optional, TypeVar, Union
 
 from loguru import logger
 from typing_extensions import ParamSpec
 
-from anyrun.exceptions import APIError, RetryError, ServerError, RateLimitError
+from anyrun.exceptions import APIError, RateLimitError, RetryError, ServerError
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -36,7 +36,7 @@ class RetryConfig:
     jitter: bool = True
     """Whether to add random jitter to delay."""
 
-    exceptions: type[Exception] | list[type[Exception]] | None = None
+    exceptions: Union[type[Exception], list[type[Exception]], None] = None
     """Exception types to retry on. If None, retry on all exceptions."""
 
 
@@ -93,7 +93,7 @@ def retry(
 
             attempt = 1
             current_delay = delay
-            last_error = None
+            last_error: Optional[Union[RateLimitError, APIError]] = None
 
             while attempt <= max_attempts:
                 try:
@@ -104,7 +104,7 @@ def retry(
                         break
 
                     # Use retry_after from RateLimitError
-                    current_delay = exc.retry_after
+                    current_delay = float(exc.retry_after if exc.retry_after is not None else delay)
                     logger.debug(
                         f"Attempt {attempt} failed with RateLimitError. "
                         f"Retrying in {current_delay:.2f} seconds..."
