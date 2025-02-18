@@ -1,9 +1,9 @@
 """Tests for validation utilities."""
 
 import pytest
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 
-from anyrun.utils.validation import validate_model
+from anyrun.utils.validation import ValidationError, validate_model
 
 
 class TestModel(BaseModel):

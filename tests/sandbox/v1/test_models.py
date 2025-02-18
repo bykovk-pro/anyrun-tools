@@ -70,7 +70,7 @@ def test_analysis_response_validation() -> None:
         },
     )
     assert response.error is False
-    assert response.data.taskid == "test-task-id"
+    assert response.data.task_id == "test-task-id"
     assert response.data.status == "running"
     assert response.data.completed is False
 
@@ -110,7 +110,7 @@ def test_task_status_update_validation() -> None:
     """Test task status update validation."""
     update = TaskStatusUpdateDto(
         task={
-            "uuid": "test-uuid",
+            "uuid": "12345678-1234-1234-1234-123456789abc",
             "status": 50,
             "remaining": 300,
             "times": {
@@ -142,6 +142,7 @@ def test_task_status_update_validation() -> None:
                     "onlyimportant": False,
                     "video": False,
                     "autoclicker": False,
+                    "residentialProxy": False,
                 },
                 "environment": {
                     "OS": {},
@@ -157,7 +158,7 @@ def test_task_status_update_validation() -> None:
         completed=False,
         error=False,
     )
-    assert update.task.uuid == "test-uuid"
+    assert update.task.uuid == "12345678-1234-1234-1234-123456789abc"
     assert update.task.status == 50
     assert update.completed is False
     assert update.error is False

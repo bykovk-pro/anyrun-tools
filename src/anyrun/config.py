@@ -2,7 +2,7 @@
 
 from typing import Dict, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationInfo, field_validator
 
 from .constants import DEFAULT_TIMEOUT, DEFAULT_USER_AGENT
 from .types import CacheBackend, LogLevel, RetryStrategy
@@ -28,8 +28,26 @@ class BaseConfig(BaseModel):
     timeout: float = Field(default=DEFAULT_TIMEOUT, ge=0, description="Request timeout in seconds")
     user_agent: str = Field(default=DEFAULT_USER_AGENT, description="User agent string")
     verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
-    headers: Dict[str, str] = Field(default_factory=dict, description="Additional HTTP headers")
-    proxies: Dict[str, str] = Field(default_factory=dict, description="HTTP/HTTPS proxies")
+    headers: Dict[str, str] = Field(
+        default_factory=lambda: {"User-Agent": DEFAULT_USER_AGENT},
+        description="Additional HTTP headers",
+    )
+
+    @field_validator("headers")  # type: ignore[misc]
+    @classmethod
+    def merge_headers(cls, v: Dict[str, str], values: ValidationInfo) -> Dict[str, str]:
+        """Merge custom headers with default headers.
+
+        Args:
+            v: Custom headers
+            values: Values being validated
+
+        Returns:
+            Dict[str, str]: Merged headers
+        """
+        result = {"User-Agent": values.data.get("user_agent", DEFAULT_USER_AGENT)}
+        result.update(v)
+        return result
 
     # Cache configuration
     cache_enabled: bool = Field(default=True, description="Enable response caching")

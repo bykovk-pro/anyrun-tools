@@ -2,9 +2,12 @@
 
 import os
 import re
-from typing import Union
+from typing import Any, Type, TypeVar, Union, cast
 
 from loguru import logger
+from pydantic import BaseModel
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class ValidationError(Exception):
@@ -119,3 +122,23 @@ def validate_hash(hash_value: str, hash_type: str) -> None:
             f"Invalid {hash_type} hash format. "
             f"Expected {len(hash_value)} hexadecimal characters."
         )
+
+
+def validate_model(model_class: Type[T], data: Any) -> T:
+    """Validate data against Pydantic model.
+
+    Args:
+        model_class: Pydantic model class
+        data: Data to validate
+
+    Returns:
+        T: Validated model instance
+
+    Raises:
+        ValidationError: If validation fails
+    """
+    try:
+        return cast(T, model_class.model_validate(data))
+    except Exception as e:
+        logger.error(f"Model validation error: {str(e)}")
+        raise ValidationError(f"Model validation failed: {str(e)}")
