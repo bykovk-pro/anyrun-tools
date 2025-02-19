@@ -41,7 +41,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install tox tox-gh-actions coverage
+        python -m pip install tox tox-gh-actions coverage pytest-cov codecov-cli
 
     - name: Test with tox
       run: tox
@@ -53,11 +53,14 @@ jobs:
         python -m coverage combine
         python -m coverage xml
         python -m coverage report
+        python -m pytest --junitxml=junit.xml
+
+    - name: Upload test results to Codecov
+      run: |
+        codecovcli do-upload --report-type test_results --file junit.xml
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-${{ matrix.os }}-${{ matrix.python-version }}
-        fail_ci_if_error: false
+      run: |
+        codecovcli upload-process
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
