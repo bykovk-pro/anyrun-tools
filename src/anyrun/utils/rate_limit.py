@@ -3,7 +3,7 @@
 import asyncio
 import time
 from dataclasses import dataclass, field
-from typing import Dict, TypedDict
+from typing import Dict, Optional, TypedDict, ClassVar, Any
 
 from loguru import logger
 
@@ -26,24 +26,18 @@ class RateLimiterState(TypedDict):
 
     tokens: float
     last_update: float
-    lock: asyncio.Lock
+    lock: Optional[asyncio.Lock]
 
 
 @dataclass
 class RateLimiter:
-    """Token bucket rate limiter implementation."""
+    """Rate limiter implementation."""
 
     rate: float
-    """Number of tokens per second."""
-
-    burst: int
-    """Maximum number of tokens that can be accumulated."""
-
+    burst: float
     key: str = "default"
-    """Rate limiter key for multiple limiters."""
 
-    _state: Dict[str, RateLimiterState] = field(default_factory=dict)
-    """Internal state for multiple rate limiters."""
+    _state: ClassVar[Dict[str, Dict[str, Any]]] = {}
 
     def __post_init__(self) -> None:
         """Initialize rate limiter state."""
@@ -51,85 +45,69 @@ class RateLimiter:
             self._state[self.key] = {
                 "tokens": float(self.burst),
                 "last_update": time.monotonic(),
-                "lock": asyncio.Lock(),
+                "lock": None,
             }
 
-    async def acquire(self, tokens: int = 1, wait: bool = True) -> None:
-        """Acquire tokens from the bucket.
-
-        Args:
-            tokens: Number of tokens to acquire
-            wait: Whether to wait for tokens to become available
-
-        Raises:
-            RateLimitError: If tokens are not available and wait is False
-            ValueError: If requested tokens exceeds burst size
-        """
-        if tokens > self.burst:
-            raise ValueError(f"Requested tokens ({tokens}) exceeds burst size ({self.burst})")
-
-        state = self._state[self.key]
-        async with state["lock"]:
-            now = time.monotonic()
-            time_passed = now - state["last_update"]
-
-            # Add new tokens based on time passed
-            new_tokens = time_passed * self.rate
-            state["tokens"] = min(state["tokens"] + new_tokens, float(self.burst))
-            state["last_update"] = now
-
-            if state["tokens"] < tokens:
-                if not wait:
-                    # Calculate time needed for tokens to become available
-                    needed = tokens - state["tokens"]
-                    retry_after = needed / self.rate
-                    raise RateLimitError(retry_after)
-
-                # Wait for tokens to become available
-                needed = tokens - state["tokens"]
-                wait_time = needed / self.rate
-                logger.debug(
-                    f"Rate limit reached. Waiting {wait_time:.1f} seconds "
-                    f"for {needed:.1f} tokens..."
-                )
-                await asyncio.sleep(wait_time)
-
-                # Update state after waiting
-                state["tokens"] = float(self.burst)
-                state["last_update"] = time.monotonic()
-
-            # Consume tokens
-            state["tokens"] -= float(tokens)
-
-    async def check(self, tokens: int = 1) -> bool:
-        """Check if tokens are available and consume them if available.
-
-        Args:
-            tokens: Number of tokens to check
+    async def _ensure_lock(self) -> asyncio.Lock:
+        """Ensure lock exists and return it.
 
         Returns:
-            bool: True if tokens are available and consumed, False otherwise
+            asyncio.Lock: The lock instance
         """
-        try:
-            state = self._state[self.key]
-            async with state["lock"]:
-                now = time.monotonic()
-                time_passed = now - state["last_update"]
+        state = self._state[self.key]
+        if state["lock"] is None:
+            state["lock"] = asyncio.Lock()
+        assert state["lock"] is not None  # for mypy
+        return state["lock"]
 
-                # Add new tokens based on time passed
-                new_tokens = time_passed * self.rate
-                state["tokens"] = min(state["tokens"] + new_tokens, float(self.burst))
-                state["last_update"] = now
+    async def acquire(self) -> None:
+        """Acquire token from rate limiter.
 
-                # Check if we have enough tokens
-                if state["tokens"] < tokens:
-                    return False
+        Raises:
+            RateLimitError: If no tokens available
+        """
+        if not await self.check():
+            raise RateLimitError("Rate limit exceeded")
 
-                # Consume tokens
-                state["tokens"] -= float(tokens)
-                return True
-        except Exception:
-            return False
+    async def check(self) -> bool:
+        """Check if token is available.
+
+        Returns:
+            bool: True if token is available
+        """
+        if self.rate <= 0 or self.burst <= 0:
+            return True
+
+        lock = await self._ensure_lock()
+        async with lock:
+            return await self._get_available_tokens() > 0
+
+    async def _get_available_tokens(self) -> float:
+        """Get available tokens.
+
+        Returns:
+            float: Number of available tokens
+        """
+        state = self._state[self.key]
+        now = time.monotonic()
+        time_passed = now - state["last_update"]
+        state["tokens"] = min(
+            self.burst,
+            state["tokens"] + time_passed * self.rate,
+        )
+        state["last_update"] = now
+
+        if state["tokens"] < 1:
+            return 0
+
+        state["tokens"] -= 1
+        return state["tokens"]
+
+    def reset(self) -> None:
+        """Reset rate limiter state."""
+        if self.key in self._state:
+            self._state[self.key]["tokens"] = float(self.burst)
+            self._state[self.key]["last_update"] = time.monotonic()
 
     def get_available_tokens(self) -> float:
         """Get number of available tokens.
@@ -144,12 +122,6 @@ class RateLimiter:
             return min(state["tokens"] + time_passed * self.rate, float(self.burst))
         except Exception:
             return 0.0
-
-    def reset(self) -> None:
-        """Reset rate limiter state."""
-        state = self._state[self.key]
-        state["tokens"] = float(self.burst)
-        state["last_update"] = time.monotonic()
 
     def get_state(self) -> dict:
         """Get the current state of the rate limiter.

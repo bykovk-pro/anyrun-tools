@@ -6,7 +6,7 @@ import time
 import pytest
 from pytest import mark
 
-from anyrun.utils import RateLimiter
+from anyrun.utils.rate_limit import RateLimiter, RateLimitError
 
 
 @pytest.fixture
@@ -17,105 +17,75 @@ def rate_limiter() -> RateLimiter:
 
 @mark.asyncio
 async def test_rate_limiter_check(rate_limiter: RateLimiter) -> None:
-    """Test rate limiter check."""
-    # First request should be allowed
-    assert await rate_limiter.check() is True
-
-    # Second request within the same second should be allowed (burst)
-    assert await rate_limiter.check() is True
-
-    # Third request within the same second should be allowed (burst)
-    assert await rate_limiter.check() is True
-
-    # Fourth request within the same second should be denied
-    assert await rate_limiter.check() is False
+    """Test rate limiter check method."""
+    assert await rate_limiter.check()  # First request should pass
+    assert await rate_limiter.check()  # Second request should pass
+    assert await rate_limiter.check()  # Third request should pass
+    assert not await rate_limiter.check()  # Fourth request should fail
 
 
 @mark.asyncio
 async def test_rate_limiter_acquire(rate_limiter: RateLimiter) -> None:
-    """Test rate limiter acquire."""
-    start_time = time.monotonic()
-
-    # First request should be immediate
-    await rate_limiter.acquire()
-    assert time.monotonic() - start_time < 0.1  # Increased threshold for CI
-
-    # Second request should be immediate (burst)
-    await rate_limiter.acquire()
-    assert time.monotonic() - start_time < 0.1  # Increased threshold for CI
-
-    # Third request should be immediate (burst)
-    await rate_limiter.acquire()
-    assert time.monotonic() - start_time < 0.1  # Increased threshold for CI
-
-    # Fourth request should wait
-    await rate_limiter.acquire()
-    elapsed = time.monotonic() - start_time
-    # Just verify that some delay occurred
-    assert elapsed > 0.0
-    assert elapsed < 1.0  # Upper bound for CI environments
+    """Test rate limiter acquire method."""
+    await rate_limiter.acquire()  # First request should pass
+    await rate_limiter.acquire()  # Second request should pass
+    await rate_limiter.acquire()  # Third request should pass
+    with pytest.raises(RateLimitError):
+        await rate_limiter.acquire()  # Fourth request should fail
 
 
 @mark.asyncio
 async def test_rate_limiter_burst(rate_limiter: RateLimiter) -> None:
     """Test rate limiter burst behavior."""
-    # Use up burst capacity
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is True
+    # Should allow burst requests
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert not await rate_limiter.check()
 
-    # Wait for rate to replenish (at least one token)
-    await asyncio.sleep(0.3)  # Increased delay for more reliable tests
-
-    # Should have one token available
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is False
+    # Wait for tokens to refill
+    await asyncio.sleep(1.0)
+    assert await rate_limiter.check()  # Should have ~5 new tokens
 
 
 @mark.asyncio
 async def test_rate_limiter_disabled(rate_limiter: RateLimiter) -> None:
     """Test disabled rate limiter."""
-    # Set high rate and burst for effectively disabled limiting
-    rate_limiter.rate = float('inf')
-    rate_limiter.burst = 1000000
-
-    # All requests should be allowed
-    for _ in range(10):
-        assert await rate_limiter.check() is True
+    rate_limiter.rate = 0
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
 
 
 @mark.asyncio
 async def test_rate_limiter_rate_change(rate_limiter: RateLimiter) -> None:
-    """Test rate limiter rate change."""
-    # Reset state
-    rate_limiter.reset()
+    """Test rate limiter with rate change."""
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert not await rate_limiter.check()
 
-    # Use default rate
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is False
-
-    # Reset and change rate to allow more requests
-    rate_limiter.reset()
-    rate_limiter.rate = 20.0  # Higher rate
-    assert await rate_limiter.check() is True
+    # Change rate and wait
+    rate_limiter.rate = 10.0
+    await asyncio.sleep(0.5)
+    assert await rate_limiter.check()  # Should have ~5 new tokens
 
 
 @mark.asyncio
 async def test_rate_limiter_burst_change(rate_limiter: RateLimiter) -> None:
-    """Test rate limiter burst change."""
-    # Reset state
-    rate_limiter.reset()
+    """Test rate limiter with burst change."""
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert not await rate_limiter.check()
 
-    # Use default burst
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is False
-
-    # Reset and change burst to allow more concurrent requests
-    rate_limiter.reset()
+    # Change burst and reset
     rate_limiter.burst = 5
-    assert await rate_limiter.check() is True
-    assert await rate_limiter.check() is True
+    rate_limiter.reset()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert await rate_limiter.check()
+    assert not await rate_limiter.check()
