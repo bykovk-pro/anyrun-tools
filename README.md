@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/github/license/bykovk-pro/anyrun-tools.svg)](https://github.com/bykovk-pro/anyrun-tools/blob/main/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue)](http://mypy-lang.org/)
-[![Downloads](https://static.pepy.tech/badge/anyrun-tools)](https://pepy.tech/project/anyrun-tools)
+[![PyPI Downloads](https://static.pepy.tech/badge/anyrun-tools/month)](https://pepy.tech/projects/anyrun-tools)
 [![codecov](https://codecov.io/gh/bykovk-pro/anyrun-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/bykovk-pro/anyrun-tools)
 
 Python SDK for ANY.RUN APIs
@@ -106,6 +106,17 @@ pip install -e .[dev]
 # Install pre-commit hooks
 pre-commit install
 
+# Run Redis for tests (optional)
+# Using Docker:
+docker run -d -p 6379:6379 redis
+# Or install Redis locally:
+# macOS: brew install redis && brew services start redis
+# Linux: sudo apt-get install redis-server && sudo service redis-server start
+# Windows: Download from https://github.com/microsoftarchive/redis/releases
+
+# Run tests
+pytest
+
 # Build documentation
 pip install -e .[docs]
 mkdocs serve
@@ -113,7 +124,7 @@ mkdocs serve
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](https://github.com/bykovk-pro/anyrun-tools/blob/main/CONTRIBUTING.md) for details.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -123,7 +134,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/bykovk-pro/anyrun-tools/blob/main/LICENSE) file for details.
 
 ## Security
 

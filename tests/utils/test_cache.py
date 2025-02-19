@@ -1,9 +1,32 @@
 """Tests for caching utilities."""
 
+import os
+import asyncio
 import pytest
 from redis.asyncio import Redis
+from redis.exceptions import ConnectionError
 
 from anyrun.utils.cache import Cache, MemoryCache
+
+
+async def is_redis_available() -> bool:
+    """Check if Redis is available.
+    
+    Returns:
+        bool: True if Redis is available, False otherwise
+    """
+    try:
+        redis = Redis(host="localhost", port=6379, db=0)
+        await redis.ping()
+        await redis.close()
+        return True
+    except (ConnectionError, OSError):
+        return False
+
+
+# Skip all Redis tests if Redis is not available
+redis_not_available = asyncio.run(is_redis_available()) is False
+skip_redis_message = "Redis server is not available"
 
 
 @pytest.fixture
@@ -43,7 +66,6 @@ async def test_memory_cache_ttl(memory_cache: Cache) -> None:
     assert value == "test_value"
 
     # Wait for TTL to expire
-    import asyncio
     await asyncio.sleep(2)
     value = await memory_cache.get("test_key")
     assert value is None
@@ -70,7 +92,7 @@ async def test_memory_cache_prefix(memory_cache: Cache) -> None:
     assert raw_value == "value"
 
 
-@pytest.mark.skip("Requires Redis server")
+@pytest.mark.skipif(redis_not_available, reason=skip_redis_message)
 async def test_redis_cache_set_get(redis_cache: Cache) -> None:
     """Test Redis cache set and get operations."""
     await redis_cache.set("test_key", "test_value")
@@ -78,7 +100,7 @@ async def test_redis_cache_set_get(redis_cache: Cache) -> None:
     assert value == "test_value"
 
 
-@pytest.mark.skip("Requires Redis server")
+@pytest.mark.skipif(redis_not_available, reason=skip_redis_message)
 async def test_redis_cache_delete(redis_cache: Cache) -> None:
     """Test Redis cache delete operation."""
     await redis_cache.set("test_key", "test_value")
@@ -87,7 +109,7 @@ async def test_redis_cache_delete(redis_cache: Cache) -> None:
     assert value is None
 
 
-@pytest.mark.skip("Requires Redis server")
+@pytest.mark.skipif(redis_not_available, reason=skip_redis_message)
 async def test_redis_cache_ttl(redis_cache: Cache) -> None:
     """Test Redis cache TTL."""
     await redis_cache.set("test_key", "test_value", ttl=1)
@@ -95,13 +117,12 @@ async def test_redis_cache_ttl(redis_cache: Cache) -> None:
     assert value == "test_value"
 
     # Wait for TTL to expire
-    import asyncio
     await asyncio.sleep(2)
     value = await redis_cache.get("test_key")
     assert value is None
 
 
-@pytest.mark.skip("Requires Redis server")
+@pytest.mark.skipif(redis_not_available, reason=skip_redis_message)
 async def test_redis_cache_disabled(redis_cache: Cache) -> None:
     """Test disabled Redis cache."""
     redis_cache.enabled = False
@@ -110,7 +131,7 @@ async def test_redis_cache_disabled(redis_cache: Cache) -> None:
     assert value is None
 
 
-@pytest.mark.skip("Requires Redis server")
+@pytest.mark.skipif(redis_not_available, reason=skip_redis_message)
 async def test_redis_cache_prefix(redis_cache: Cache) -> None:
     """Test Redis cache key prefix."""
     redis_cache.prefix = "test:"
