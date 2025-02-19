@@ -17,14 +17,13 @@ on:
       - '.github/workflows/test.yml'
 
 jobs:
-  test:
-    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+  test-linux:
+    name: Python ${{ matrix.python-version }} on Linux
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
-        os: [ubuntu-latest, macos-latest, windows-latest]
 
     services:
       redis:
@@ -58,7 +57,7 @@ jobs:
     - name: Test with tox
       run: tox
       env:
-        PLATFORM: ${{ matrix.os }}
+        PLATFORM: ubuntu-latest
 
     - name: Generate coverage XML
       run: |
@@ -73,5 +72,101 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml,./junit.xml
         flags: unittests
-        name: codecov-umbrella
+        name: codecov-umbrella-linux
+        fail_ci_if_error: true
+
+  test-macos:
+    name: Python ${{ matrix.python-version }} on macOS
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          pyproject.toml
+          tox.ini
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install tox tox-gh-actions coverage pytest-cov respx redis
+        python -m pip install -e .
+
+    - name: Test with tox
+      run: tox
+      env:
+        PLATFORM: macos-latest
+        SKIP_REDIS_TESTS: true
+
+    - name: Generate coverage XML
+      run: |
+        python -m coverage combine
+        python -m coverage xml
+        python -m coverage report
+        python -m pytest --junitxml=junit.xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml,./junit.xml
+        flags: unittests
+        name: codecov-umbrella-macos
+        fail_ci_if_error: true
+
+  test-windows:
+    name: Python ${{ matrix.python-version }} on Windows
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          pyproject.toml
+          tox.ini
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install tox tox-gh-actions coverage pytest-cov respx redis
+        python -m pip install -e .
+
+    - name: Test with tox
+      run: tox
+      env:
+        PLATFORM: windows-latest
+        SKIP_REDIS_TESTS: true
+
+    - name: Generate coverage XML
+      run: |
+        python -m coverage combine
+        python -m coverage xml
+        python -m coverage report
+        python -m pytest --junitxml=junit.xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml,./junit.xml
+        flags: unittests
+        name: codecov-umbrella-windows
         fail_ci_if_error: true

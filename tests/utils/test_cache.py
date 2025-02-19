@@ -16,6 +16,9 @@ async def is_redis_available() -> bool:
     Returns:
         bool: True if Redis is available, False otherwise
     """
+    if os.getenv("SKIP_REDIS_TESTS"):
+        return False
+        
     try:
         redis = Redis(host="localhost", port=6379, db=0)
         await redis.ping()
@@ -27,7 +30,7 @@ async def is_redis_available() -> bool:
 
 # Skip all Redis tests if Redis is not available
 redis_not_available = asyncio.run(is_redis_available()) is False
-skip_redis_message = "Redis server is not available"
+skip_redis_message = "Redis server is not available or tests are skipped"
 
 
 @pytest.fixture
