@@ -1,0 +1,44 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    name: Build and deploy documentation
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+        cache-dependency-path: 'pyproject.toml'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install mkdocs-material
+
+    - name: Build and deploy docs
+      run: |
+        mkdocs gh-deploy --force
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
