@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .common import HashesApiDto, PrivacyType, ThreatLevelText
 from .task_status_update import TaskStatusDto
@@ -740,37 +740,11 @@ class ReportSpecsDto(BaseModel):
     suspStruct: bool = Field(default=False, description="Suspicious structure flag")
     torUsed: bool = Field(default=False, description="TOR used flag")
 
-    class Config:
-        """Model configuration."""
-
-        json_schema_extra = {
-            "example": {
-                "autoStart": False,
-                "cpuOverrun": False,
-                "crashedApps": False,
-                "crashedTask": False,
-                "debugOutput": False,
-                "executableDropped": False,
-                "exploitable": False,
-                "injects": False,
-                "knownThreat": False,
-                "lowAccess": False,
-                "malwareConfig": False,
-                "memOverrun": False,
-                "multiprocessing": False,
-                "networkLoader": False,
-                "networkThreats": False,
-                "notStarted": False,
-                "privEscalation": False,
-                "rebooted": False,
-                "serviceLauncher": False,
-                "spam": False,
-                "staticDetections": False,
-                "stealing": False,
-                "suspStruct": False,
-                "torUsed": False,
-            }
-        }
+    model_config = ConfigDict(
+        validate_assignment=True,
+        frozen=True,
+        extra="forbid",
+    )
 
     @model_validator(mode="after")  # type: ignore[misc]
     def validate_fields(self) -> "ReportSpecsDto":

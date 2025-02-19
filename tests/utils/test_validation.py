@@ -1,83 +1,98 @@
 """Tests for validation utilities."""
 
-import pytest
+from typing import Any, Dict, Optional
+
 from pydantic import BaseModel, Field
 
-from anyrun.utils.validation import ValidationError, validate_model
+from anyrun.utils import validate_model
+from anyrun.utils.validation import ValidationError
 
 
 class TestModel(BaseModel):
     """Test model for validation."""
 
-    name: str = Field(min_length=1, max_length=64)
-    age: int = Field(ge=0, le=150)
-    email: str = Field(pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+    name: str = Field(min_length=3, max_length=50)
+    age: int = Field(ge=0, le=120)
+    email: str = Field(pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    optional_field: Optional[str] = None
 
 
-def test_validate_model_success() -> None:
+async def test_validate_model_success() -> None:
     """Test successful model validation."""
-    data = {
+    data: Dict[str, Any] = {
         "name": "John Doe",
         "age": 30,
         "email": "john@example.com",
     }
-    result = validate_model(TestModel, data)
+    result = await validate_model(TestModel, data)
     assert result.name == "John Doe"
     assert result.age == 30
     assert result.email == "john@example.com"
 
 
-def test_validate_model_invalid_name() -> None:
+async def test_validate_model_invalid_name() -> None:
     """Test model validation with invalid name."""
-    data = {
-        "name": "",  # Empty name
+    data: Dict[str, Any] = {
+        "name": "Jo",  # Too short
         "age": 30,
         "email": "john@example.com",
     }
-    with pytest.raises(ValidationError):
-        validate_model(TestModel, data)
+    try:
+        await validate_model(TestModel, data)
+        assert False, "Should raise ValidationError"
+    except ValidationError as e:
+        assert "String should have at least 3 characters" in str(e)
 
 
-def test_validate_model_invalid_age() -> None:
+async def test_validate_model_invalid_age() -> None:
     """Test model validation with invalid age."""
-    data = {
+    data: Dict[str, Any] = {
         "name": "John Doe",
-        "age": -1,  # Negative age
+        "age": -1,  # Invalid age
         "email": "john@example.com",
     }
-    with pytest.raises(ValidationError):
-        validate_model(TestModel, data)
+    try:
+        await validate_model(TestModel, data)
+        assert False, "Should raise ValidationError"
+    except ValidationError as e:
+        assert "Input should be greater than or equal to 0" in str(e)
 
 
-def test_validate_model_invalid_email() -> None:
+async def test_validate_model_invalid_email() -> None:
     """Test model validation with invalid email."""
-    data = {
+    data: Dict[str, Any] = {
         "name": "John Doe",
         "age": 30,
-        "email": "invalid-email",  # Invalid email format
+        "email": "invalid-email",  # Invalid email
     }
-    with pytest.raises(ValidationError):
-        validate_model(TestModel, data)
+    try:
+        await validate_model(TestModel, data)
+        assert False, "Should raise ValidationError"
+    except ValidationError as e:
+        assert "String should match pattern" in str(e)
 
 
-def test_validate_model_missing_field() -> None:
-    """Test model validation with missing field."""
-    data = {
+async def test_validate_model_missing_field() -> None:
+    """Test model validation with missing required field."""
+    data: Dict[str, Any] = {
         "name": "John Doe",
         "age": 30,
         # Missing email field
     }
-    with pytest.raises(ValidationError):
-        validate_model(TestModel, data)
+    try:
+        await validate_model(TestModel, data)
+        assert False, "Should raise ValidationError"
+    except ValidationError as e:
+        assert "Field required" in str(e)
 
 
-def test_validate_model_extra_field() -> None:
+async def test_validate_model_extra_field() -> None:
     """Test model validation with extra field."""
-    data = {
+    data: Dict[str, Any] = {
         "name": "John Doe",
         "age": 30,
         "email": "john@example.com",
-        "extra": "field",  # Extra field
+        "extra_field": "value",  # Extra field
     }
-    result = validate_model(TestModel, data)
-    assert not hasattr(result, "extra")  # Extra field should be ignored
+    result = await validate_model(TestModel, data)
+    assert not hasattr(result, "extra_field")

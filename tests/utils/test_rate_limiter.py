@@ -4,6 +4,7 @@ import asyncio
 import time
 
 import pytest
+from pytest import mark
 
 from anyrun.utils import RateLimiter
 
@@ -14,6 +15,7 @@ def rate_limiter() -> RateLimiter:
     return RateLimiter(rate=5.0, burst=3, key="test")  # Lower rate for more predictable tests
 
 
+@mark.asyncio
 async def test_rate_limiter_check(rate_limiter: RateLimiter) -> None:
     """Test rate limiter check."""
     # First request should be allowed
@@ -29,6 +31,7 @@ async def test_rate_limiter_check(rate_limiter: RateLimiter) -> None:
     assert await rate_limiter.check() is False
 
 
+@mark.asyncio
 async def test_rate_limiter_acquire(rate_limiter: RateLimiter) -> None:
     """Test rate limiter acquire."""
     start_time = time.monotonic()
@@ -53,6 +56,7 @@ async def test_rate_limiter_acquire(rate_limiter: RateLimiter) -> None:
     assert elapsed < 1.0  # Upper bound for CI environments
 
 
+@mark.asyncio
 async def test_rate_limiter_burst(rate_limiter: RateLimiter) -> None:
     """Test rate limiter burst behavior."""
     # Use up burst capacity
@@ -68,6 +72,7 @@ async def test_rate_limiter_burst(rate_limiter: RateLimiter) -> None:
     assert await rate_limiter.check() is False
 
 
+@mark.asyncio
 async def test_rate_limiter_disabled(rate_limiter: RateLimiter) -> None:
     """Test disabled rate limiter."""
     # Set high rate and burst for effectively disabled limiting
@@ -79,6 +84,7 @@ async def test_rate_limiter_disabled(rate_limiter: RateLimiter) -> None:
         assert await rate_limiter.check() is True
 
 
+@mark.asyncio
 async def test_rate_limiter_rate_change(rate_limiter: RateLimiter) -> None:
     """Test rate limiter rate change."""
     # Reset state
@@ -96,6 +102,7 @@ async def test_rate_limiter_rate_change(rate_limiter: RateLimiter) -> None:
     assert await rate_limiter.check() is True
 
 
+@mark.asyncio
 async def test_rate_limiter_burst_change(rate_limiter: RateLimiter) -> None:
     """Test rate limiter burst change."""
     # Reset state

@@ -1,9 +1,18 @@
 """Configuration for Sandbox API."""
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from ..config import BaseConfig
 from ..constants import APIVersion
+from .constants import (
+    SUPPORTED_BROWSERS,
+    SUPPORTED_ENV_TYPES,
+    SUPPORTED_LINUX_VERSIONS,
+    SUPPORTED_OS_TYPES,
+    SUPPORTED_START_FOLDERS,
+    SUPPORTED_WINDOWS_VERSIONS,
+)
+from .schemas import OSType
 
 
 class SandboxConfig(BaseConfig):
@@ -76,8 +85,68 @@ class SandboxConfig(BaseConfig):
         description="File download rate limit",
     )
 
-    class Config:
-        """Pydantic model configuration."""
+    model_config = ConfigDict(
+        validate_assignment=True,
+        frozen=True,
+        extra="forbid",
+    )
 
-        validate_assignment = True
-        extra = "forbid"
+    def validate_env_version(self) -> None:
+        """Validate environment version."""
+        if self.os_type == OSType.WINDOWS:
+            if self.env_version not in SUPPORTED_WINDOWS_VERSIONS:
+                raise ValueError(
+                    f"Unsupported Windows version: {self.env_version}. "
+                    f"Supported versions: {SUPPORTED_WINDOWS_VERSIONS}"
+                )
+        elif self.os_type == OSType.LINUX:
+            if self.env_version not in SUPPORTED_LINUX_VERSIONS:
+                raise ValueError(
+                    f"Unsupported Linux version: {self.env_version}. "
+                    f"Supported versions: {SUPPORTED_LINUX_VERSIONS}"
+                )
+
+    def validate_os_type(self) -> None:
+        """Validate operating system type."""
+        if self.os_type not in SUPPORTED_OS_TYPES:
+            raise ValueError(
+                f"Unsupported operating system type: {self.os_type}. "
+                f"Supported types: {SUPPORTED_OS_TYPES}"
+            )
+
+    def validate_start_folder(self) -> None:
+        """Validate start folder."""
+        if self.start_folder not in SUPPORTED_START_FOLDERS:
+            raise ValueError(
+                f"Unsupported start folder: {self.start_folder}. "
+                f"Supported folders: {SUPPORTED_START_FOLDERS}"
+            )
+
+    def validate_env_type(self) -> None:
+        """Validate environment type."""
+        if self.env_type not in SUPPORTED_ENV_TYPES:
+            raise ValueError(
+                f"Unsupported environment type: {self.env_type}. "
+                f"Supported types: {SUPPORTED_ENV_TYPES}"
+            )
+
+    def validate_browser(self) -> None:
+        """Validate browser."""
+        if self.browser is not None and self.browser not in SUPPORTED_BROWSERS:
+            raise ValueError(
+                f"Unsupported browser: {self.browser}. " f"Supported browsers: {SUPPORTED_BROWSERS}"
+            )
+
+    def validate_timeout(self) -> None:
+        """Validate timeout."""
+        if self.timeout < 0:
+            raise ValueError("Timeout must be non-negative")
+
+    def validate(self) -> None:
+        """Validate configuration."""
+        self.validate_env_version()
+        self.validate_os_type()
+        self.validate_start_folder()
+        self.validate_env_type()
+        self.validate_browser()
+        self.validate_timeout()

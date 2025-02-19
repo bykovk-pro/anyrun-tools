@@ -1,14 +1,14 @@
 # ANY.RUN Tools
 
-[![Tests](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/test.yml/badge.svg)](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/test.yml)
-[![Documentation](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/docs.yml/badge.svg)](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/docs.yml)
-[![PyPI version](https://badge.fury.io/py/anyrun-tools.svg)](https://badge.fury.io/py/anyrun-tools)
 [![Python versions](https://img.shields.io/pypi/pyversions/anyrun-tools.svg)](https://pypi.org/project/anyrun-tools/)
-[![License](https://img.shields.io/github/license/bykovk-pro/anyrun-tools.svg)](https://github.com/bykovk-pro/anyrun-tools/blob/main/LICENSE)
+[![Tests](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/test.yml/badge.svg)](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/bykovk-pro/anyrun-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/bykovk-pro/anyrun-tools)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue)](http://mypy-lang.org/)
+[![Documentation](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/docs.yml/badge.svg)](https://github.com/bykovk-pro/anyrun-tools/actions/workflows/docs.yml)
+[![License](https://img.shields.io/github/license/bykovk-pro/anyrun-tools.svg)](https://github.com/bykovk-pro/anyrun-tools/blob/main/LICENSE)
+[![PyPI version](https://badge.fury.io/py/anyrun-tools.svg)](https://badge.fury.io/py/anyrun-tools)
 [![PyPI Downloads](https://static.pepy.tech/badge/anyrun-tools/month)](https://pepy.tech/projects/anyrun-tools)
-[![codecov](https://codecov.io/gh/bykovk-pro/anyrun-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/bykovk-pro/anyrun-tools)
 
 Python SDK for ANY.RUN APIs
 

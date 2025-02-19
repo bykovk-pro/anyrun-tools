@@ -6,6 +6,7 @@ from typing import Any, Type, TypeVar, Union, cast
 
 from loguru import logger
 from pydantic import BaseModel
+from pydantic import ValidationError as PydanticValidationError
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -68,7 +69,7 @@ def validate_file_size(
         raise ValidationError(f"File validation failed: {str(e)}")
 
 
-def validate_model(model_class: Type[T], data: Any) -> T:
+async def validate_model(model_class: Type[T], data: Any) -> T:
     """Validate data against Pydantic model.
 
     Args:
@@ -83,6 +84,10 @@ def validate_model(model_class: Type[T], data: Any) -> T:
     """
     try:
         return cast(T, model_class.model_validate(data))
+    except PydanticValidationError as e:
+        # Convert Pydantic validation error to our own ValidationError
+        raise ValidationError(str(e)) from e
     except Exception as e:
+        # Wrap other errors
         logger.error(f"Model validation error: {str(e)}")
-        raise ValidationError(f"Model validation failed: {str(e)}")
+        raise ValidationError(f"Model validation failed: {str(e)}") from e

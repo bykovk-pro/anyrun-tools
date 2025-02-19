@@ -5,8 +5,9 @@ import asyncio
 import pytest
 from redis.asyncio import Redis
 from redis.exceptions import ConnectionError
+from typing import AsyncGenerator
 
-from anyrun.utils.cache import Cache, MemoryCache
+from anyrun.utils.cache import Cache, MemoryCache, RedisCache
 
 
 async def is_redis_available() -> bool:
@@ -18,7 +19,7 @@ async def is_redis_available() -> bool:
     try:
         redis = Redis(host="localhost", port=6379, db=0)
         await redis.ping()
-        await redis.close()
+        await redis.aclose()
         return True
     except (ConnectionError, OSError):
         return False
@@ -36,12 +37,18 @@ def memory_cache() -> Cache:
 
 
 @pytest.fixture
-async def redis_cache() -> Cache:
+async def redis_client() -> AsyncGenerator[Redis, None]:
+    """Get Redis client instance."""
+    client = Redis(host="localhost", port=6379, db=0)
+    yield client
+    await client.flushdb()
+    await client.aclose()
+
+
+@pytest.fixture
+async def redis_cache(redis_client: Redis) -> Cache:
     """Get Redis cache instance."""
-    redis = Redis(host="localhost", port=6379, db=0)
-    cache = Cache(backend=redis, enabled=True)
-    yield cache
-    await redis.close()
+    return Cache(backend=RedisCache(redis_client, prefix="anyrun:"), enabled=True)
 
 
 async def test_memory_cache_set_get(memory_cache: Cache) -> None:

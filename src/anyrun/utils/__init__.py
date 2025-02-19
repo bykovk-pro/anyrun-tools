@@ -3,7 +3,7 @@
 from .cache import Cache, CacheBackend, NoCache, RedisCache
 from .rate_limit import RateLimiter, RateLimitError
 from .retry import RetryConfig, RetryError, retry
-from .validation import ValidationError, validate_api_key, validate_file_size
+from .validation import ValidationError, validate_api_key, validate_file_size, validate_model
 
 __all__ = [
     "Cache",
@@ -17,5 +17,6 @@ __all__ = [
     "RateLimitError",
     "validate_api_key",
     "validate_file_size",
+    "validate_model",
     "ValidationError",
 ]
