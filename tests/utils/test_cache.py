@@ -134,11 +134,28 @@ async def test_redis_cache_disabled(redis_cache: Cache) -> None:
 @pytest.mark.skipif(redis_not_available, reason=skip_redis_message)
 async def test_redis_cache_prefix(redis_cache: Cache) -> None:
     """Test Redis cache key prefix."""
-    redis_cache.prefix = "test:"
+    # Clear Redis first
+    await redis_cache.backend.client.flushdb()  # type: ignore
+
+    # Test with default prefix
     await redis_cache.set("key", "value")
     value = await redis_cache.get("key")
     assert value == "value"
 
-    # Check that the key is stored with prefix
-    raw_value = await redis_cache.backend.get("test:key")  # type: ignore
-    assert raw_value == b"value"  # Redis returns bytes
+    # Check that the key is stored with default prefix
+    raw_value = await redis_cache.backend.client.get("anyrun:key")  # type: ignore
+    assert raw_value == b'"value"'  # Redis returns JSON-encoded bytes
+
+    # Change prefix and test again
+    redis_cache.prefix = "test:"
+    await redis_cache.set("key", "new_value")
+    value = await redis_cache.get("key")
+    assert value == "new_value"
+
+    # Check that the key is stored with new prefix
+    raw_value = await redis_cache.backend.client.get("test:key")  # type: ignore
+    assert raw_value == b'"new_value"'  # Redis returns JSON-encoded bytes
+
+    # Also check that old key still exists (with old prefix)
+    old_value = await redis_cache.backend.client.get("anyrun:key")  # type: ignore
+    assert old_value == b'"value"'

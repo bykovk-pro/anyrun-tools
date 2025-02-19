@@ -31,8 +31,6 @@ async def test_anyrun_client_initialization(api_key: str) -> None:
     client = AnyRunClient(api_key=api_key)
     assert client.config.api_key == api_key
     assert client.sandbox is not None
-    assert client.ti_lookup is not None
-    assert client.ti_yara is not None
 
 
 @pytest.mark.parametrize(

@@ -90,14 +90,6 @@ EVENT_FAILED: Final[str] = "analysis.failed"
 EVENT_STOPPED: Final[str] = "analysis.stopped"
 EVENT_DELETED: Final[str] = "analysis.deleted"
 
-# File extensions
-SUPPORTED_EXTENSIONS: Final[Dict[str, Set[str]]] = {
-    "executables": {".exe", ".dll", ".sys", ".scr", ".com"},
-    "scripts": {".ps1", ".vbs", ".js", ".jse", ".hta"},
-    "documents": {".doc", ".docx", ".xls", ".xlsx", ".pdf"},
-    "archives": {".zip", ".7z", ".rar", ".tar", ".gz"},
-}
-
 # Error messages
 ERROR_INVALID_OS: Final[str] = "Invalid operating system. Supported: {}"
 ERROR_INVALID_VERSION: Final[str] = "Invalid {} version. Supported: {}"
@@ -106,7 +98,6 @@ ERROR_INVALID_ENV_TYPE: Final[str] = "Invalid environment type for {}. Supported
 ERROR_INVALID_BROWSER: Final[str] = "Invalid browser for {}. Supported: {}"
 ERROR_INVALID_START_FOLDER: Final[str] = "Invalid start folder for {}. Supported: {}"
 ERROR_INVALID_PRIVACY: Final[str] = "Invalid privacy type. Supported: {}"
-ERROR_INVALID_FILE_EXT: Final[str] = "Invalid file extension. Supported: {}"
 ERROR_FILE_TOO_LARGE: Final[str] = "File size exceeds limit of {} bytes"
 ERROR_TASK_NOT_FOUND: Final[str] = "Analysis task not found: {}"
 ERROR_TASK_COMPLETED: Final[str] = "Analysis task already completed: {}"

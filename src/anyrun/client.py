@@ -17,8 +17,6 @@ from .constants import (
 )
 from .exceptions import APIError, AuthenticationError, NotFoundError, RateLimitError, ServerError
 from .sandbox import create_sandbox_client
-from .ti_lookup import TILookupClient
-from .ti_yara import TIYaraClient
 from .types import CacheBackend, RetryStrategy
 from .utils import Cache, RateLimiter, retry
 from .utils.cache import CacheBackend as CacheBackendType
@@ -301,8 +299,6 @@ class AnyRunClient:
         self,
         api_key: str,
         sandbox_version: str = "v1",
-        ti_lookup_version: str = "v1",
-        ti_yara_version: str = "v1",
         **kwargs: Any,
     ) -> None:
         """Initialize ANY.RUN client.
@@ -310,8 +306,6 @@ class AnyRunClient:
         Args:
             api_key: ANY.RUN API key
             sandbox_version: Sandbox API version
-            ti_lookup_version: TI Lookup API version
-            ti_yara_version: TI YARA API version
             **kwargs: Additional configuration options
         """
         self.config = BaseConfig(
@@ -339,18 +333,6 @@ class AnyRunClient:
             verify_ssl=self.config.verify_ssl,
             user_agent=self.config.user_agent,
             headers=self.config.headers,
-        )
-        self.ti_lookup = TILookupClient(
-            api_key=api_key,
-            version=ti_lookup_version,
-            cache_enabled=self.config.cache_enabled,
-            timeout=int(self.config.timeout),
-        )
-        self.ti_yara = TIYaraClient(
-            api_key=api_key,
-            version=ti_yara_version,
-            cache_enabled=self.config.cache_enabled,
-            timeout=int(self.config.timeout),
         )
 
     @property
@@ -388,8 +370,6 @@ class AnyRunClient:
     async def close(self) -> None:
         """Close all clients."""
         await self.sandbox.close()
-        await self.ti_lookup.close()
-        await self.ti_yara.close()
         await self._base_client.close()
 
     async def __aenter__(self) -> "AnyRunClient":

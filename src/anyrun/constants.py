@@ -32,8 +32,6 @@ MAX_BATCH_SIZE: Final[int] = 100
 # Rate limits (requests per minute)
 RATE_LIMITS: Final[Dict[str, Dict[str, int]]] = {
     "sandbox": {"analyze": 10, "list": 60, "status": 120, "download": 30},
-    "ti_lookup": {"hash": 60, "url": 60, "ip": 60, "domain": 60},
-    "ti_yara": {"match": 30, "list": 60},
 }
 
 # Cache TTLs (seconds)
@@ -41,8 +39,6 @@ CACHE_TTLS: Final[Dict[str, int]] = {
     "environment": 3600,  # 1 hour
     "user_info": 300,  # 5 minutes
     "analysis": 60,  # 1 minute
-    "ti_lookup": 1800,  # 30 minutes
-    "ti_yara": 1800,  # 30 minutes
 }
 
 # Retry configuration
@@ -55,36 +51,6 @@ WEBHOOK_EVENTS: Final[Tuple[str, ...]] = (
     "analysis.started",
     "analysis.finished",
     "analysis.failed",
-    "ti_lookup.matched",
-    "ti_yara.matched",
-)
-
-# File extensions
-SUPPORTED_EXTENSIONS: Final[Tuple[str, ...]] = (
-    # Executables
-    ".exe",
-    ".dll",
-    ".sys",
-    ".scr",
-    ".com",
-    # Scripts
-    ".ps1",
-    ".vbs",
-    ".js",
-    ".jse",
-    ".hta",
-    # Documents
-    ".doc",
-    ".docx",
-    ".xls",
-    ".xlsx",
-    ".pdf",
-    # Archives
-    ".zip",
-    ".7z",
-    ".rar",
-    ".tar",
-    ".gz",
 )
 
 # Environment defaults
@@ -114,74 +80,4 @@ HTTP_METHODS: Final[Tuple[str, ...]] = (
     "DELETE",
     "HEAD",
     "OPTIONS",
-)
-
-# File extensions
-FILE_EXTENSIONS: Final[Tuple[str, ...]] = (
-    ".exe",
-    ".dll",
-    ".sys",
-    ".scr",
-    ".cpl",
-    ".ocx",
-    ".ax",
-    ".bin",
-    ".cmd",
-    ".bat",
-    ".com",
-    ".js",
-    ".jse",
-    ".vbs",
-    ".vbe",
-    ".wsf",
-    ".wsh",
-    ".ps1",
-    ".msi",
-    ".doc",
-    ".docx",
-    ".xls",
-    ".xlsx",
-    ".ppt",
-    ".pptx",
-    ".pdf",
-    ".rtf",
-    ".html",
-    ".htm",
-    ".hta",
-    ".swf",
-    ".jar",
-    ".class",
-    ".zip",
-    ".rar",
-    ".7z",
-    ".tar",
-    ".gz",
-    ".bz2",
-    ".iso",
-    ".img",
-    ".vhd",
-    ".vmdk",
-    ".eml",
-    ".msg",
-    ".url",
-    ".lnk",
-    ".reg",
-    ".inf",
-    ".scf",
-    ".job",
-    ".tmp",
-    ".dat",
-    ".log",
-    ".txt",
-    ".cfg",
-    ".ini",
-    ".db",
-    ".sqlite",
-    ".mdb",
-    ".accdb",
-    ".pst",
-    ".ost",
-    ".bak",
-    ".old",
-    ".new",
 )

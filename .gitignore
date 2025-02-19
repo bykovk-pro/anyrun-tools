@@ -47,6 +47,7 @@ venv.bak/
 htmlcov/
 .pytest_cache/
 coverage.xml
+coverage.*.xml
 *.cover
 .hypothesis/
 .pytest_cache/

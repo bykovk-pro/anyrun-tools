@@ -77,7 +77,7 @@ class Cache:
             default_ttl: Default TTL in seconds
         """
         self.enabled = enabled
-        self.prefix = prefix
+        self._prefix = prefix
         self.default_ttl = default_ttl
 
         if not enabled:
@@ -90,6 +90,26 @@ class Cache:
             self.backend = RedisCache(backend, prefix, default_ttl)
         else:
             raise ValueError("Invalid cache backend")
+
+    @property
+    def prefix(self) -> str:
+        """Get cache key prefix.
+
+        Returns:
+            str: Cache key prefix
+        """
+        return self._prefix
+
+    @prefix.setter
+    def prefix(self, value: str) -> None:
+        """Set cache key prefix.
+
+        Args:
+            value: New prefix value
+        """
+        self._prefix = value
+        if hasattr(self.backend, "prefix"):
+            self.backend.prefix = value
 
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache.

@@ -44,9 +44,7 @@ response = await client.sandbox.analyze(
     obj_type="file",
     file=b"file_content",
     env_os="windows",
-    env_version="10",
-    env_bitness="64",
-    env_type="clean"
+    env_version="10"
 )
 
 task_id = response["data"]["task_id"]

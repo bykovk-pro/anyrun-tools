@@ -68,62 +68,6 @@ def validate_file_size(
         raise ValidationError(f"File validation failed: {str(e)}")
 
 
-def validate_url(url: str) -> None:
-    """Validate URL format.
-
-    Args:
-        url: URL to validate
-
-    Raises:
-        ValidationError: If URL is invalid
-    """
-    if not url:
-        raise ValidationError("URL is required")
-
-    # Basic URL format validation
-    pattern = (
-        r"^https?://"  # http:// or https://
-        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"  # domain
-        r"localhost|"  # localhost
-        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ip
-        r"(?::\d+)?"  # optional port
-        r"(?:/?|[/?]\S+)$"  # path
-    )
-    if not re.match(pattern, url, re.IGNORECASE):
-        raise ValidationError("Invalid URL format")
-
-
-def validate_hash(hash_value: str, hash_type: str) -> None:
-    """Validate hash format.
-
-    Args:
-        hash_value: Hash value to validate
-        hash_type: Hash type (md5, sha1, sha256)
-
-    Raises:
-        ValidationError: If hash is invalid
-    """
-    if not hash_value:
-        raise ValidationError("Hash value is required")
-
-    if hash_type not in ("md5", "sha1", "sha256"):
-        raise ValidationError(
-            f"Invalid hash type: {hash_type}. " "Supported types: md5, sha1, sha256"
-        )
-
-    patterns = {
-        "md5": r"^[a-f0-9]{32}$",
-        "sha1": r"^[a-f0-9]{40}$",
-        "sha256": r"^[a-f0-9]{64}$",
-    }
-
-    if not re.match(patterns[hash_type], hash_value.lower()):
-        raise ValidationError(
-            f"Invalid {hash_type} hash format. "
-            f"Expected {len(hash_value)} hexadecimal characters."
-        )
-
-
 def validate_model(model_class: Type[T], data: Any) -> T:
     """Validate data against Pydantic model.
 
