@@ -8,7 +8,7 @@ from anyrun.utils import validate_model
 from anyrun.utils.validation import ValidationError
 
 
-class TestModel(BaseModel):
+class SampleModel(BaseModel):
     """Test model for validation."""
 
     name: str = Field(min_length=3, max_length=50)
@@ -24,7 +24,7 @@ async def test_validate_model_success() -> None:
         "age": 30,
         "email": "john@example.com",
     }
-    result = await validate_model(TestModel, data)
+    result = await validate_model(SampleModel, data)
     assert result.name == "John Doe"
     assert result.age == 30
     assert result.email == "john@example.com"
@@ -38,7 +38,7 @@ async def test_validate_model_invalid_name() -> None:
         "email": "john@example.com",
     }
     try:
-        await validate_model(TestModel, data)
+        await validate_model(SampleModel, data)
         assert False, "Should raise ValidationError"
     except ValidationError as e:
         assert "String should have at least 3 characters" in str(e)
@@ -52,7 +52,7 @@ async def test_validate_model_invalid_age() -> None:
         "email": "john@example.com",
     }
     try:
-        await validate_model(TestModel, data)
+        await validate_model(SampleModel, data)
         assert False, "Should raise ValidationError"
     except ValidationError as e:
         assert "Input should be greater than or equal to 0" in str(e)
@@ -66,7 +66,7 @@ async def test_validate_model_invalid_email() -> None:
         "email": "invalid-email",  # Invalid email
     }
     try:
-        await validate_model(TestModel, data)
+        await validate_model(SampleModel, data)
         assert False, "Should raise ValidationError"
     except ValidationError as e:
         assert "String should match pattern" in str(e)
@@ -80,7 +80,7 @@ async def test_validate_model_missing_field() -> None:
         # Missing email field
     }
     try:
-        await validate_model(TestModel, data)
+        await validate_model(SampleModel, data)
         assert False, "Should raise ValidationError"
     except ValidationError as e:
         assert "Field required" in str(e)
@@ -94,5 +94,5 @@ async def test_validate_model_extra_field() -> None:
         "email": "john@example.com",
         "extra_field": "value",  # Extra field
     }
-    result = await validate_model(TestModel, data)
+    result = await validate_model(SampleModel, data)
     assert not hasattr(result, "extra_field")

@@ -85,7 +85,7 @@ exclude = [
 src_paths = ["src/anyrun"]
 
 [tool.coverage.run]
-source = ["anyrun"]
+source = ["src/anyrun"]
 branch = true
 parallel = true
 concurrency = ["thread", "multiprocessing"]
