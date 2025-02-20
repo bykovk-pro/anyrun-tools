@@ -88,9 +88,10 @@ src_paths = ["src/anyrun"]
 source = ["anyrun"]
 branch = true
 parallel = true
+# Note: data_file is controlled by COVERAGE_FILE environment variable in tox.ini
+# This setting is primarily used for CI environment
 data_file = ".coverage"
 relative_files = true
-dynamic_context = "test_function"
 
 [tool.coverage.paths]
 source = [

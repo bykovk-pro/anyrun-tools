@@ -117,6 +117,11 @@ docker run -d -p 6379:6379 redis
 # Run tests
 pytest
 
+# Note: While running tests locally, coverage reports might not be generated correctly.
+# This is expected behavior as the coverage collection is optimized for CI environment.
+# The main purpose of local testing is to verify that all tests pass successfully.
+# For accurate coverage reports, please refer to the CI builds.
+
 # Build documentation
 pip install -e .[docs]
 mkdocs serve
